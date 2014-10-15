@@ -2,17 +2,26 @@ package main;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.MenuBar;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JInternalFrame.JDesktopIcon;
 
 /********************************************************************
  * GUI.java
@@ -39,6 +48,8 @@ public class GUI {
 	/** Text field to accept user input. */
 	private JTextField textField;
 	
+	private JMenuBar menuBar;
+	
 	/** Monospaced size 12 font. */
 	private Font monospaced;
 	
@@ -49,7 +60,26 @@ public class GUI {
 		
 		monospaced = new Font("monospaced", Font.PLAIN, 12);
 		
+		setupMenu();
 		setupFrame();
+		
+		setDestination();
+	}
+	
+	private void setupMenu() {
+		menuBar = new JMenuBar();
+		
+		menuBar.setBackground(Color.lightGray);
+		menuBar.setBorderPainted(false);
+		
+		JButton b = new JButton("Change Destination");
+		b.setBackground(Color.lightGray);
+		b.setBorderPainted(false);
+		b.setFocusable(false);
+		b.setPreferredSize(new Dimension(0, 18));
+		b.setActionCommand("changeIP");
+		
+		menuBar.add(b);
 	}
 	
 	/****************************************************************
@@ -59,6 +89,7 @@ public class GUI {
 	private void setupFrame() {
 		frame = new JFrame("Virtual-Network Client");
 		frame.setLayout(new BorderLayout());
+		frame.setLocationRelativeTo(null);
 
 		/* Attempts to read the image file. */
 		try {
@@ -75,6 +106,7 @@ public class GUI {
 		setupTextField();	
 		
 		// Adds components
+		frame.setJMenuBar(menuBar);
 		frame.add(new JScrollPane(textArea), BorderLayout.PAGE_START);
 		frame.add(textField, BorderLayout.PAGE_END);
 
@@ -105,11 +137,23 @@ public class GUI {
 		textField.setFont(monospaced);
 	}
 	
+	private void setDestination() {
+		new DestinationDialog(frame);
+	}
+	
 	/* Action listener to handle user input from text field. */
 	private ActionListener al = new ActionListener() {
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			
+			/* Checks for change destination button */
+			if (e.getActionCommand().equals("changeIP")){
+				
+			}
+			
+			// Ignores blank lines
+			if (textField.getText().isEmpty()) return;
 			
 			// Appends text inputed by used to text area.
 			textArea.append(textField.getText() + "\n");
@@ -120,4 +164,32 @@ public class GUI {
 	public static void main(String[] args) {
 		new GUI();
 	}
+	
+	/* Inner class to create the set destination window */
+	private class DestinationDialog extends JDialog {
+		
+		private DestinationDialog(JFrame topWindow) {
+			setTitle("Set Destinaton IP");
+			setUndecorated(true);
+			setLocation(topWindow.getLocation());
+			
+			JPanel panel = new JPanel();
+			
+			/* Adds 4 text fields to the panel */
+			for (int i = 1; i <= 4; i++) {
+				JTextField field = new JTextField(3);
+				field.addActionListener(al);
+				field.setActionCommand("field" + i);
+				panel.add(field);
+			}
+			
+			add(panel);
+			
+			pack();
+			setVisible(true);
+			setModal(true);
+		}
+	}
 }
+
+
