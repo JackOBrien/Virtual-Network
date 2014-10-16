@@ -94,6 +94,7 @@ public class GUI {
 	private void setupFrame() {
 		frame = new JFrame("Virtual-Network Client");
 		frame.setLayout(new BorderLayout());
+		frame.setLocationRelativeTo(null);
 
 		/* Attempts to read the image file. */
 		try {
@@ -147,11 +148,23 @@ public class GUI {
 		destDialog = new DestinationDialog(frame, firstTime);
 	}
 	
+	private void setDestination() {
+		new DestinationDialog(frame, false);
+	}
+	
 	/* Action listener to handle user input from text field. */
 	private ActionListener al = new ActionListener() {
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			
+			/* Checks for change destination button */
+			if (e.getActionCommand().equals("changeIP")){
+				
+			}
+			
+			// Ignores blank lines
+			if (textField.getText().isEmpty()) return;
 			
 			String source = e.getActionCommand();
 			
