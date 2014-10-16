@@ -5,26 +5,24 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
-import java.awt.MenuBar;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
+import javax.swing.JLabel;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JInternalFrame.JDesktopIcon;
-import javax.swing.text.MaskFormatter;
 
 /********************************************************************
  * GUI.java
@@ -51,12 +49,15 @@ public class GUI {
 	/** Text field to accept user input. */
 	private JTextField textField;
 	
+	/** Bar which holds the button to change dst and label displaying the
+	 * current dst. */
 	private JMenuBar menuBar;
+	
+	/** Label displaying the IPv4 address of the current destiniation. */
+	private JLabel ipLabel;
 	
 	/** Monospaced size 12 font. */
 	private Font monospaced;
-	
-	private JDialog destDialog;
 	
 	/****************************************************************
 	 * Default constructor for the GUI.
@@ -71,20 +72,34 @@ public class GUI {
 		setDestination(true);
 	}
 	
+	/****************************************************************
+	 * Sets up the menu and its components.
+	 ***************************************************************/
 	private void setupMenu() {
-		menuBar = new JMenuBar();
 		
+		// Creates and configures the menu bar
+		menuBar = new JMenuBar();
 		menuBar.setBackground(Color.lightGray);
 		menuBar.setBorderPainted(false);
-		
+		menuBar.setLayout(new BorderLayout());
+		menuBar.setPreferredSize(new Dimension(0, 18));
+
+		// Creates and configures the change dst button
 		JButton b = new JButton("Change Destination");
 		b.setBackground(Color.lightGray);
 		b.setBorderPainted(false);
 		b.setFocusable(false);
-		b.setPreferredSize(new Dimension(0, 18));
+		b.addActionListener(al);
 		b.setActionCommand("changeIP");
 		
-		menuBar.add(b);
+		// Creates and configures the IP dst label
+		ipLabel = new JLabel();
+		ipLabel.setForeground(new Color(0, 122, 8));
+		ipLabel.setFont(monospaced);
+		
+		// Adds the two components to the menu bar
+		menuBar.add(b, BorderLayout.WEST);
+		menuBar.add(ipLabel, BorderLayout.EAST);
 	}
 	
 	/****************************************************************
@@ -94,7 +109,6 @@ public class GUI {
 	private void setupFrame() {
 		frame = new JFrame("Virtual-Network Client");
 		frame.setLayout(new BorderLayout());
-		frame.setLocationRelativeTo(null);
 
 		/* Attempts to read the image file. */
 		try {
@@ -103,6 +117,7 @@ public class GUI {
 			throw new RuntimeException("Icon resource not found.");
 		}
 		
+		/* Sets the frame's icon the the globe image */
 		if (globe != null) {
 			frame.setIconImage(globe);
 		}
@@ -112,12 +127,12 @@ public class GUI {
 		
 		// Adds components
 		frame.setJMenuBar(menuBar);
-		frame.add(new JScrollPane(textArea), BorderLayout.PAGE_START);
+		frame.add(new JScrollPane(textArea));
 		frame.add(textField, BorderLayout.PAGE_END);
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.pack();
-		frame.setLocationRelativeTo(null);
+		frame.setLocationRelativeTo(null); // Centers the frame on the screen.
 		frame.setVisible(true);
 	}
 	
@@ -144,12 +159,24 @@ public class GUI {
 		textField.setFont(monospaced);
 	}
 	
+	/****************************************************************
+	 * Creates a new DestinationDialog.
+	 * 
+	 * @param firstTime true if this is the dialog being displayed.
+	 * at the start of the program.
+	 ***************************************************************/
 	private void setDestination(boolean firstTime) {
-		destDialog = new DestinationDialog(frame, firstTime);
+		new DestinationDialog(frame, firstTime);
 	}
 	
-	private void setDestination() {
-		new DestinationDialog(frame, false);
+	/****************************************************************
+	 * Creates a new DestinationDialog with a specified title.
+	 * 
+	 * @param firstTime true if this is the dialog being displayed.
+	 * @param title the title to display on the dialog.
+	 ***************************************************************/
+	private void setDestination(boolean firstTime, String title) {
+		new DestinationDialog(frame, firstTime, title);
 	}
 	
 	/* Action listener to handle user input from text field. */
@@ -157,15 +184,6 @@ public class GUI {
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			
-			/* Checks for change destination button */
-			if (e.getActionCommand().equals("changeIP")){
-				
-			}
-			
-			// Ignores blank lines
-			if (textField.getText().isEmpty()) return;
-			
 			String source = e.getActionCommand();
 			
 			/* Checks for change destination button */
@@ -173,19 +191,33 @@ public class GUI {
 				setDestination(false);
 			}
 			
-			/* Checks for cancel button */
-			else if (source.equals("Close")) {
+			/* Checks or input from the set destination text field */
+			else if (source.equals("destinationField")) {
+				JTextField tf = (JTextField) e.getSource();
 				
+				String enteredText = tf.getText();
+				InetAddress ip = null;
+				
+				/* Validates input */
+				try {
+					ip = InetAddress.getByName(enteredText);
+				} catch (UnknownHostException e1) {
+					
+					String title = "Invalid IPv4 Address";
+					
+					// Re prompts the user based on whether or not we
+					// already have an IP.
+					setDestination(ipLabel.getText().isEmpty(), title);
+					return;
+				}
+				
+				// Updates label text to the new IP addr
+				ipLabel.setText("Dst IP: " + ip.getHostAddress() + "   ");
 			}
 			
 			/* Checks for exit button */
 			else if (source.equals("Exit")) {
 				System.exit(0);
-			}
-			
-			/* Checks or input from the set destination text field */
-			else if (source.equals("destinationField")) {
-				destDialog.dispose();
 			}
 			
 			/* Checks or input from the main text field */
@@ -206,24 +238,72 @@ public class GUI {
 	}
 	
 	/* Inner class to create the set destination window */
-	private class DestinationDialog extends JDialog {
+	private class DestinationDialog extends JDialog implements ActionListener{
 		
+		/****************************************************************
+		 * Constructor which allows for a user specified title.
+		 * 
+		 * @param frame the frame to center the dialog over.
+		 * @param first tells if the button should be exit (T) or cancel (F).
+		 * @param text the title of the dialog.
+		 ***************************************************************/
+		private DestinationDialog(JFrame frame, boolean first, String text) {
+			setupDialog(frame, first, text);
+		}
+		
+		/****************************************************************
+		 * Constructor which sets a default title.
+		 * 
+		 * @param frame the frame to center the dialog over.
+		 * @param first tells if the button should be exit (T) or cancel (F).
+		 ***************************************************************/
 		private DestinationDialog(JFrame topWindow, boolean first) {
-			setTitle("Set Destinaton IP");
+			setupDialog(topWindow, first, "Set Destiniation IP");
+		}
+		
+		/****************************************************************
+		 * Sets up the entire dialog window.
+		 * 
+		 * @param frame the frame to center the dialog over.
+		 * @param first tells if the button should be exit (T) or cancel (F).
+		 * @param text the title of the dialog.
+		 ***************************************************************/
+		private void setupDialog(JFrame frame, boolean first, String text) {
+			setUndecorated(true);
 			
+			Dimension preferred = new Dimension(0, 18);
+			
+			// Sets up panel which will contain all components
 			JPanel panel = new JPanel(new BorderLayout(5, 5));
-			panel.setPreferredSize(new Dimension(200, 40));
+			panel.setPreferredSize(new Dimension(205, 70));
+			panel.setBorder(
+					BorderFactory.createLineBorder(new Color(0, 122, 8), 2));
 			
+			// Sets up title label
+			JLabel title = new JLabel(text);
+			title.setOpaque(true);
+			title.setBackground(Color.LIGHT_GRAY);
+			title.setPreferredSize(preferred);
+			
+			// Sets up text field
 			JTextField field = new JTextField(15);
 			field.addActionListener(al);
+			field.addActionListener(this);
 			field.setActionCommand("destinationField");
 			field.setFont(monospaced);
-						
+			field.setPreferredSize(preferred);
+					
+			// Sets up exit.cancel button
 			JButton b = new JButton();
+			b.setOpaque(true);
+			b.setBackground(Color.LIGHT_GRAY);
 			b.addActionListener(al);
-			b.setPreferredSize(new Dimension(0, 18));
+			b.addActionListener(this);
+			b.setPreferredSize(preferred);
 			b.setFocusable(false);
 			
+			/* Switches the name of the button based on 
+			 * the "first" parameter */
 			String name = "Cancle";
 			if (first) {
 				name = "Exit";
@@ -232,6 +312,8 @@ public class GUI {
 			b.setText(name);
 			b.setActionCommand(name);
 			
+			// Adds the components to the panel, then to the dialog
+			panel.add(title, BorderLayout.NORTH);
 			panel.add(field, BorderLayout.CENTER);
 			panel.add(b, BorderLayout.SOUTH);
 			add(panel);
@@ -239,9 +321,14 @@ public class GUI {
 			requestFocus();
 			
 			pack();
-			setLocationRelativeTo(topWindow);
+			setLocationRelativeTo(frame);
 			setModal(true);
 			setVisible(true);
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			dispose();
 		}
 	}
 }
