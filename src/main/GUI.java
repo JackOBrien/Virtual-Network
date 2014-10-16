@@ -2,6 +2,7 @@ package main;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
@@ -197,17 +198,25 @@ public class GUI {
 				
 				String enteredText = tf.getText();
 				InetAddress ip = null;
+								
+				String currentLabel = ipLabel.getText();
 				
 				/* Validates input */
 				try {
 					ip = InetAddress.getByName(enteredText);
 				} catch (UnknownHostException e1) {
 					
+					if (currentLabel.isEmpty()) {
+						ipLabel.setText("-- Invalid IP --");
+					} else {
+						ipLabel.setText(currentLabel);
+					}
+					
 					String title = "Invalid IPv4 Address";
 					
 					// Re prompts the user based on whether or not we
 					// already have an IP.
-					setDestination(ipLabel.getText().isEmpty(), title);
+					setDestination(currentLabel.isEmpty(), title);
 					return;
 				}
 				
