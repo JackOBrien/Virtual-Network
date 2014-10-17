@@ -27,13 +27,13 @@ public class IP_Header {
 	
 	private void setupHeader() {
 		int version = 4;
-		bits = insertData(0, 4, version);
+		insertData(0, 4, version);
 		
-		bits =  insertData(4, 8, (header_length / 4));
+		insertData(4, 8, (header_length / 4));
 		
 		Random rand = new Random();
 		int id = rand.nextInt(65536);
-		bits = insertData(32, 48, id);
+		insertData(32, 48, id);
 		
 		int ttl = 64;
 		insertData(64, 72, ttl);
@@ -42,13 +42,13 @@ public class IP_Header {
 		insertData(72, 80, protocol);
 	}
 	
-	private String insertData(int start, int end, int data) {
+	private void insertData(int start, int end, int data) {
 		String dataStr = Integer.toString(data, 2);
 		int length = end - start;
 		int bufferLength = (length - dataStr.length());
 		String binary = new String(new char[length]).replace("\0", "0");
 		binary = binary.substring(0, bufferLength) + dataStr;
-		return bits.substring(0, start) + binary + bits.substring(end);
+		bits = bits.substring(0, start) + binary + bits.substring(end);
 	}
 	
 	private void calculateChecksum() {
@@ -80,7 +80,7 @@ public class IP_Header {
 	}
 	
 	public void setSource(InetAddress srcIP) {
-		String[] ipStrAtt = srcIP.getHostAddress().split(".");
+		String[] ipStrAtt = srcIP.getHostAddress().split("\\.");
 		
 		// First index of the source IP field
 		int srcIndex = 96;
@@ -90,12 +90,14 @@ public class IP_Header {
 			int start = srcIndex + (i * 8);
 			int end = start + 8;
 			
-			insertData(start, end, Integer.parseInt(ipStrAtt[i], 2));
+			insertData(start, end, Integer.parseInt(ipStrAtt[i]));
 		}
+		
+		System.out.println("after\t" + bits);
 	}
 	
 	public void setDestination(InetAddress dstIP) {
-		String[] ipStrAtt = dstIP.getHostAddress().split(".");
+		String[] ipStrAtt = dstIP.getHostAddress().split("\\.");
 
 		// First index of the destination IP field
 		int srcIndex = 128;
@@ -105,7 +107,7 @@ public class IP_Header {
 			int start = srcIndex + (i * 8);
 			int end = start + 8;
 
-			insertData(start, end, Integer.parseInt(ipStrAtt[i], 2));
+			insertData(start, end, Integer.parseInt(ipStrAtt[i]));
 		}
 	}
 	

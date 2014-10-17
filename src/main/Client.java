@@ -9,6 +9,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 public class Client {
 
@@ -66,12 +67,14 @@ public class Client {
 		// Gets the bit string from the UDP header
 		String udpBits = udpH.getBitString();
 		
-		String packetBits = ipBits + udpBits + message;
+		byte[] messageData = message.getBytes();
+		
+		String packetBits = ipBits + udpBits;
 		int packetLength = packetBits.length() / 8;
 		
-		byte[] bytes = new byte[packetLength];
+		byte[] bytes = new byte[packetLength + messageData.length];
 		
-		for (int i = 0; i < bytes.length; i++) {
+		for (int i = 0; i < packetLength; i++) {
 			int start = i * 8;
 			int end = start + 8;
 			
@@ -79,6 +82,12 @@ public class Client {
 			
 			bytes[i] = (byte) Integer.parseInt(octet, 2);
 		}
+		
+		for (int i = packetLength; i < bytes.length; i++) {
+			bytes[i] = messageData[i-packetLength];
+		}
+		
+		System.out.println(Arrays.toString(bytes));
 		
 		return bytes;
 	}

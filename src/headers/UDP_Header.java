@@ -44,13 +44,13 @@ public class UDP_Header {
 		insertData(40, 56, sum);
 	}
 	
-	private String insertData(int start, int end, int data) {
+	private void insertData(int start, int end, int data) {
 		String dataStr = Integer.toString(data, 2);
 		int length = end - start;
 		int bufferLength = length - dataStr.length();
 		String binary = new String(new char[length]).replace("\0", "0");
 		binary = binary.substring(0, bufferLength) + dataStr;
-		return bits.substring(0, start) + binary + bits.substring(end);
+		bits = bits.substring(0, start) + binary + bits.substring(end);
 	}
 
 	public String getBitString() {
