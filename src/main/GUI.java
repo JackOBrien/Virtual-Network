@@ -1,29 +1,15 @@
 package main;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dialog;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import javax.imageio.ImageIO;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenuBar;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 /********************************************************************
  * GUI.java
@@ -31,10 +17,10 @@ import javax.swing.JTextField;
  * GUI to accept user input and print results.
  *
  * @author Jack O'Brien
- * @authon Megan Maher
+ * @author Megan Maher
  * @author Tyler McCarthy
  * 
- * @version Oct 14, 2014
+ * @version Oct 15, 2014
  *******************************************************************/
 public class GUI {
 	
@@ -60,10 +46,15 @@ public class GUI {
 	/** Monospaced size 12 font. */
 	private Font monospaced;
 	
+	private InetAddress dstAddr;
+	
+	private Client client;
+	
 	/****************************************************************
 	 * Default constructor for the GUI.
 	 ***************************************************************/
-	public GUI() {
+	public GUI(Client client) {
+		this.client = client;
 		
 		monospaced = new Font("monospaced", Font.PLAIN, 12);
 		
@@ -220,8 +211,10 @@ public class GUI {
 					return;
 				}
 				
-				// Updates label text to the new IP addr
-				ipLabel.setText("Dst IP: " + ip.getHostAddress() + "   ");
+				dstAddr = ip;
+				
+				// Updates label text to the new IP address
+				ipLabel.setText("Dst IP: " + dstAddr.getHostAddress() + "   ");
 			}
 			
 			/* Checks for exit button */
@@ -235,20 +228,37 @@ public class GUI {
 				// Ignores blank lines
 				if (textField.getText().isEmpty()) return;
 
+				String message = textField.getText();
+				
 				// Appends text inputed by used to text area.
-				textArea.append(textField.getText() + "\n");
+				textArea.append(message + "\n");
 				textField.setText("");
+				
+				client.sendMessage(message, dstAddr);
 			}
 		}
 	};
 	
 	public static void main(String[] args) {
-		new GUI();
+		
+		Client client = null;
+		try {
+			client = new Client();
+		} catch (SocketException e) {
+			// TODO: Alert User then exit
+			System.err.println("Port in use");
+			return;
+		}
+		
+		new GUI(client);
 	}
 	
 	/* Inner class to create the set destination window */
 	private class DestinationDialog extends JDialog implements ActionListener{
 		
+		/** Default serial version UID to satisfy eclipse */
+		private static final long serialVersionUID = 1L;
+
 		/****************************************************************
 		 * Constructor which allows for a user specified title.
 		 * 
@@ -313,7 +323,7 @@ public class GUI {
 			
 			/* Switches the name of the button based on 
 			 * the "first" parameter */
-			String name = "Cancle";
+			String name = "Cancel";
 			if (first) {
 				name = "Exit";
 			}
@@ -337,6 +347,7 @@ public class GUI {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			textField.requestFocus();
 			dispose();
 		}
 	}
