@@ -89,6 +89,10 @@ public class Client {
 		
 		System.out.println(Arrays.toString(bytes));
 		
+		for (byte b : bytes) {
+			System.out.print(Integer.toHexString(((int) b ) & 0xFF) + ", ");
+		}
+		
 		return bytes;
 	}
 }

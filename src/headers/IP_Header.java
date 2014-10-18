@@ -62,21 +62,35 @@ public class IP_Header {
 		}
 				
 		// Set checksum to 0
-		octets[6] = "00000000";
-		octets[7] = "00000000";
-		
+		octets[10] = "00000000";
+		octets[11] = "00000000";
+				
 		int sum = 0;
 		
 		for (String octet : octets) {
 			sum += Integer.parseInt(octet, 2);
 		}
 	
-		insertData(79, 95, sum);
+		String afterAdding = Integer.toBinaryString(sum);
+		
+		String highOrder = afterAdding.substring(0, afterAdding.length() - 8);
+		afterAdding = afterAdding.substring(highOrder.length());
+		
+		sum = Integer.parseInt(afterAdding, 2) 
+				+ Integer.parseInt(highOrder, 2);
+		
+		afterAdding = Integer.toBinaryString(sum);
+		
+		afterAdding = afterAdding.replace('1', '2');
+		afterAdding = afterAdding.replace('0', '1');
+		afterAdding = afterAdding.replace('2', '0');
+						
+		insertData(80, 96, Integer.parseInt(afterAdding, 2));
 	}
 	
 	public void setDataSize(int length) {
 		length += header_length;
-		insertData(16, 31, length);
+		insertData(16, 32, length);
 	}
 	
 	public void setSource(InetAddress srcIP) {
