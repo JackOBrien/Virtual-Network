@@ -40,8 +40,24 @@ public class UDP_Header {
 		for (String octet : octets) {
 			sum += Integer.parseInt(octet, 2);
 		}
-	
-		insertData(40, 56, sum);
+				
+		String afterAdding = Integer.toBinaryString(sum);
+		
+		if (afterAdding.length() > 8) {
+			String highOrder = afterAdding.substring(0, afterAdding.length() - 8);
+			afterAdding = afterAdding.substring(highOrder.length());
+			
+			sum = Integer.parseInt(afterAdding, 2) 
+					+ Integer.parseInt(highOrder, 2);
+			
+			afterAdding = Integer.toBinaryString(sum);
+		}
+		
+		afterAdding = afterAdding.replace('1', '2');
+		afterAdding = afterAdding.replace('0', '1');
+		afterAdding = afterAdding.replace('2', '0');
+						
+		insertData(48, 64, Integer.parseInt(afterAdding, 2));
 	}
 	
 	private void insertData(int start, int end, int data) {

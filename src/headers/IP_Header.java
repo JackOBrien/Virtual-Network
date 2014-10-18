@@ -107,7 +107,6 @@ public class IP_Header {
 			insertData(start, end, Integer.parseInt(ipStrAtt[i]));
 		}
 		
-		System.out.println("after\t" + bits);
 	}
 	
 	public void setDestination(InetAddress dstIP) {
