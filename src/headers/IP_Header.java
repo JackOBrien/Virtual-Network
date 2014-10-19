@@ -101,7 +101,6 @@ public class IP_Header {
 				sum = Integer.toBinaryString(s);
 				sum = String.format("%16s", sum).replace(' ', '0');
 			}
-			
 		}
 		
 		sum = sum.replace('1', '2');

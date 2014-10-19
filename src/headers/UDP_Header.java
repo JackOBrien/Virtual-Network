@@ -56,7 +56,7 @@ public class UDP_Header {
 			
 			// Converts two octets into 16 bit value
 			value = octets[i] + octets[i + 1];
-						
+
 			// Adds value to the current sum
 			int s = Integer.parseInt(sum, 2) + Integer.parseInt(value, 2);
 			sum = Integer.toBinaryString(s);
@@ -75,13 +75,11 @@ public class UDP_Header {
 			}
 			
 		}
-		
+
 		sum = sum.replace('1', '2');
 		sum = sum.replace('0', '1');
 		sum = sum.replace('2', '0');
-						
-		System.out.println("UDP Checksum: " + Integer.toHexString(Integer.parseInt(sum, 2)));
-		
+
 		insertData(48, 64, Integer.parseInt(sum, 2));
 	}
 	
