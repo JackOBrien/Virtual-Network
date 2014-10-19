@@ -144,6 +144,8 @@ public class IP_Header {
 		afterAdding = afterAdding.replace('0', '1');
 		afterAdding = afterAdding.replace('2', '0');
 						
+		System.out.println("IP Checksum: " + Integer.toHexString(Integer.parseInt(afterAdding, 2)));
+		
 		insertData(80, 96, Integer.parseInt(afterAdding, 2));
 	}
 	
