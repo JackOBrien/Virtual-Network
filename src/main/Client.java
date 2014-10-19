@@ -52,10 +52,7 @@ public class Client {
 		ipH.setDestination(dstAddr);
 		
 		// Set the IP header data length field
-		ipH.setDataSize(message.length());
-		
-		// Gets the bit string from the IP header
-		String ipBits = ipH.getBitString();
+		ipH.setDataSize(message.length() + udpH.getLength());
 		
 		// Set the ports
 		udpH.setSrcPort(PORT);
@@ -64,8 +61,17 @@ public class Client {
 		// Set the UDP header data length field
 		udpH.setDataLength(message.length());
 		
-		// Gets the bit string from the UDP header
+		// Calculates and sets the UDP header checksum
+		udpH.calculateChecksum(ipH.getPseudoHeader());
+		
+		// Gets the bit string for the UDP header
 		String udpBits = udpH.getBitString();
+		
+		// Calculates and sets the IP header checksum
+		ipH.calculateChecksum(udpBits, message);
+		
+		// Gets the bit string from the IP header
+		String ipBits = ipH.getBitString();
 		
 		byte[] messageData = message.getBytes();
 		
@@ -87,6 +93,7 @@ public class Client {
 			bytes[i] = messageData[i-packetLength];
 		}
 		
+		// TODO : Remove these
 		System.out.println(Arrays.toString(bytes));
 		
 		for (byte b : bytes) {

@@ -19,32 +19,53 @@ public class UDP_Header {
 	}
 	
 	public void setDataLength(int length) {
-		insertData(32, 40, length);
+		insertData(32, 40, (length + header_length));
 	}
 	
-	private void calculateChecksum() {
+	public void calculateChecksum(String ipv4Bits) {
+		
+		int lenIP = (ipv4Bits.length() / 8); 	// #IPv4 octets
+		int lenUDP = (header_length - 2);		// Length of UDP - checksum
 		
 		// Creates the array of octets for the first three
 		// fields (ignores the checksum field)
-		String[] octets = new String[header_length - 2];
+		String[] octets = new String[lenIP + lenUDP];
 		
-		for (int i = 0; i < octets.length; i++) {
+		/* Adds IPv4 pseudo header bits to octet array */
+		for (int i = 0; i < lenIP; i++) {
 			int start = i * 8;
 			int end = start + 8;
 			
-			octets[i] = bits.substring(start, end);
+			octets[i] = ipv4Bits.substring(start, end);
+		}
+		
+		/* Adds UDP bits to octet array */
+		for (int i = 0; i < lenUDP; i++) {
+			int start = i * 8;
+			int end = start + 8;
+			
+			octets[i + lenIP] = bits.substring(start, end);
 		}
 		
 		int sum = 0;
 		
-		for (String octet : octets) {
-			sum += Integer.parseInt(octet, 2);
+		/* Loops through every pair of octets and adds them to the sum
+		 * as a 16 bit value */
+		for (int i = 0; i < octets.length; i += 2) {
+			
+			// Converts two octets into 16 bit value
+			String value = octets[i] + octets[i+1];
+			
+			// Adds value to the current sum
+			sum += Integer.parseInt(value, 2);
 		}
+
 				
 		String afterAdding = Integer.toBinaryString(sum);
 		
 		if (afterAdding.length() > 8) {
-			String highOrder = afterAdding.substring(0, afterAdding.length() - 8);
+			String highOrder = 
+					afterAdding.substring(0, afterAdding.length() - 8);
 			afterAdding = afterAdding.substring(highOrder.length());
 			
 			sum = Integer.parseInt(afterAdding, 2) 
@@ -69,8 +90,11 @@ public class UDP_Header {
 		bits = bits.substring(0, start) + binary + bits.substring(end);
 	}
 
+	public int getLength() {
+		return header_length;
+	}
+	
 	public String getBitString() {
-		calculateChecksum();
 		return bits;
 	}
 	
