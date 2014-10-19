@@ -47,40 +47,42 @@ public class UDP_Header {
 			octets[i + lenIP] = bits.substring(start, end);
 		}
 		
-		int sum = 0;
+		String sum = new String(new char[16]).replace("\0", "0");
 		
 		/* Loops through every pair of octets and adds them to the sum
 		 * as a 16 bit value */
 		for (int i = 0; i < octets.length; i += 2) {
+			String value = "";
 			
 			// Converts two octets into 16 bit value
-			String value = octets[i] + octets[i+1];
-			
-			// Adds value to the current sum
-			sum += Integer.parseInt(value, 2);
-		}
-
-				
-		String afterAdding = Integer.toBinaryString(sum);
-		
-		if (afterAdding.length() > 16) {
-			String highOrder = 
-					afterAdding.substring(0, afterAdding.length() - 16);
-			afterAdding = afterAdding.substring(highOrder.length());
-			
-			sum = Integer.parseInt(afterAdding, 2) 
-					+ Integer.parseInt(highOrder, 2);
-			
-			afterAdding = Integer.toBinaryString(sum);
-		}
-		
-		afterAdding = afterAdding.replace('1', '2');
-		afterAdding = afterAdding.replace('0', '1');
-		afterAdding = afterAdding.replace('2', '0');
+			value = octets[i] + octets[i + 1];
 						
-		System.out.println("UDP Checksum: " + Integer.toHexString(Integer.parseInt(afterAdding, 2)));
+			// Adds value to the current sum
+			int s = Integer.parseInt(sum, 2) + Integer.parseInt(value, 2);
+			sum = Integer.toBinaryString(s);
+			sum = String.format("%16s", sum).replace(' ', '0');
+			
+			// Handles 16-bit carry correction
+			if (sum.length() > 16) {
+				String carryStr = sum.substring(0, sum.length() - 16);
+				int carry = Integer.parseInt(carryStr, 2);
+				
+				s = Integer.parseInt(sum.substring(carryStr.length()), 2);
+				s += carry;
+				
+				sum = Integer.toBinaryString(s);
+				sum = String.format("%16s", sum).replace(' ', '0');
+			}
+			
+		}
 		
-		insertData(48, 64, Integer.parseInt(afterAdding, 2));
+		sum = sum.replace('1', '2');
+		sum = sum.replace('0', '1');
+		sum = sum.replace('2', '0');
+						
+		System.out.println("UDP Checksum: " + Integer.toHexString(Integer.parseInt(sum, 2)));
+		
+		insertData(48, 64, Integer.parseInt(sum, 2));
 	}
 	
 	private void insertData(int start, int end, int data) {
@@ -89,7 +91,7 @@ public class UDP_Header {
 		int bufferLength = length - dataStr.length();
 		String binary = new String(new char[length]).replace("\0", "0");
 		binary = binary.substring(0, bufferLength) + dataStr;
-		System.out.println(start + " " + end);
+
 		bits = bits.substring(0, start) + binary + bits.substring(end);
 	}
 
