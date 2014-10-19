@@ -63,9 +63,9 @@ public class UDP_Header {
 				
 		String afterAdding = Integer.toBinaryString(sum);
 		
-		if (afterAdding.length() > 8) {
+		if (afterAdding.length() > 16) {
 			String highOrder = 
-					afterAdding.substring(0, afterAdding.length() - 8);
+					afterAdding.substring(0, afterAdding.length() - 16);
 			afterAdding = afterAdding.substring(highOrder.length());
 			
 			sum = Integer.parseInt(afterAdding, 2) 
