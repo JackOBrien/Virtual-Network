@@ -60,8 +60,8 @@ public class IP_Header {
 	 * @param udpBits bit string containing the UDP header data
 	 * @param message String of ASCII text containing the message
 	 ***************************************************************/
-	public void calculateChecksum(String udpBits, String message) {
-		String[] octets = new String[totalLength];
+	public void calculateChecksum() {
+		String[] octets = new String[header_length];
 		
 		/* Adds the IP header to the octets array */
 		for (int i = 0; i < header_length; i++) {
@@ -74,79 +74,40 @@ public class IP_Header {
 		// Set checksum to 0
 		octets[10] = "00000000";
 		octets[11] = "00000000";
-				
-		int udpLength = (udpBits.length() / 8); // length in bytes
 		
-		/* Adds the UDP header to the octets array */
-		for (int i = 0; i < udpLength; i++) {
-			int start = i * 8;
-			int end = start + 8;
-			
-			octets[i + header_length] = udpBits.substring(start, end);
-		}
-		
-		String msgBits = "";
-		
-		/* Convert message string to bit string */
-		for (int i = 0; i < message.length(); i++) {
-			int ascii = (int) message.charAt(i);
-			String binary = Integer.toBinaryString(ascii);
-			binary = String.format("%8s", binary).replace(' ', '0');
-			msgBits += binary;
-		}
-				
-		int currentIndex = (header_length + udpLength);
-		
-		/* Adds the message data to the octets array */
-		for (int i = currentIndex; i < octets.length; i++) {
-			int start = (i - currentIndex) * 8;
-			int end = start + 8;
-			
-			octets[i] = msgBits.substring(start, end);
-		}
-		
-		int sum = 0;
+		String sum = new String(new char[16]).replace("\0", "0");
 		
 		/* Loops through every pair of octets and adds them to the sum
 		 * as a 16 bit value */
 		for (int i = 0; i < octets.length; i += 2) {
 			String value = "";
 			
-			/* Checks for odd number of octets */
-			if ((i + 1) < octets.length) {
-				
-				// Converts two octets into 16 bit value
-				value = octets[i] + octets[i + 1];
-			} else {
-				value = octets[i];
-			}
-			
-			System.out.println(value);
+			// Converts two octets into 16 bit value
+			value = octets[i] + octets[i + 1];
 			
 			// Adds value to the current sum
-			sum += Integer.parseInt(value, 2);
-		}
-	
-		String afterAdding = Integer.toBinaryString(sum);
-		
-		if (afterAdding.length() > 16) {
-			String highOrder = 
-					afterAdding.substring(0, afterAdding.length() - 16);
-			afterAdding = afterAdding.substring(highOrder.length());
+			int s = Integer.parseInt(sum, 2) + Integer.parseInt(value, 2);
+			sum = Integer.toBinaryString(s);
 			
-			sum = Integer.parseInt(afterAdding, 2) 
-					+ Integer.parseInt(highOrder, 2);
-			
-			afterAdding = Integer.toBinaryString(sum);
+			// Handles 16-bit carry correction
+			if (sum.length() > 16) {
+				String carryStr = sum.substring(0, sum.length() - 16);
+				int carry = Integer.parseInt(carryStr, 2);
+				
+				s = Integer.parseInt(sum.substring(carryStr.length()), 2);
+				s += carry;
+				
+				sum = Integer.toBinaryString(s);
+			}
 		}
 		
-		afterAdding = afterAdding.replace('1', '2');
-		afterAdding = afterAdding.replace('0', '1');
-		afterAdding = afterAdding.replace('2', '0');
+		sum = sum.replace('1', '2');
+		sum = sum.replace('0', '1');
+		sum = sum.replace('2', '0');
 						
-		System.out.println("IP Checksum: " + Integer.toHexString(Integer.parseInt(afterAdding, 2)));
+		System.out.println("IP Checksum: " + Integer.toHexString(Integer.parseInt(sum, 2)));
 		
-		insertData(80, 96, Integer.parseInt(afterAdding, 2));
+		insertData(80, 96, Integer.parseInt(sum, 2));
 	}
 	
 	public void setDataSize(int length) {

@@ -68,7 +68,7 @@ public class Client {
 		String udpBits = udpH.getBitString();
 		
 		// Calculates and sets the IP header checksum
-		ipH.calculateChecksum(udpBits, message);
+		ipH.calculateChecksum();
 		
 		// Gets the bit string from the IP header
 		String ipBits = ipH.getBitString();
