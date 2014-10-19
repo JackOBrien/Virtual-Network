@@ -19,7 +19,7 @@ public class UDP_Header {
 	}
 	
 	public void setDataLength(int length) {
-		insertData(32, 40, (length + header_length));
+		insertData(32, 48, (length + header_length));
 	}
 	
 	public void calculateChecksum(String ipv4Bits) {
@@ -78,6 +78,8 @@ public class UDP_Header {
 		afterAdding = afterAdding.replace('0', '1');
 		afterAdding = afterAdding.replace('2', '0');
 						
+		System.out.println("UDP Checksum: " + Integer.toHexString(Integer.parseInt(afterAdding, 2)));
+		
 		insertData(48, 64, Integer.parseInt(afterAdding, 2));
 	}
 	
@@ -87,6 +89,7 @@ public class UDP_Header {
 		int bufferLength = length - dataStr.length();
 		String binary = new String(new char[length]).replace("\0", "0");
 		binary = binary.substring(0, bufferLength) + dataStr;
+		System.out.println(start + " " + end);
 		bits = bits.substring(0, start) + binary + bits.substring(end);
 	}
 
