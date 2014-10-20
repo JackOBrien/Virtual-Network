@@ -62,13 +62,10 @@ public class Client {
 		udpH.setDataLength(message.length());
 		
 		// Calculates and sets the UDP header checksum
-		udpH.calculateChecksum(ipH.getPseudoHeader());
+		udpH.calculateChecksum(ipH.getPseudoHeader(), message);
 		
 		// Gets the bit string for the UDP header
 		String udpBits = udpH.getBitString();
-		
-		// Calculates and sets the IP header checksum
-		ipH.calculateChecksum();
 		
 		// Gets the bit string from the IP header
 		String ipBits = ipH.getBitString();

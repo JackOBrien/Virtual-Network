@@ -22,14 +22,20 @@ public class UDP_Header {
 		insertData(32, 48, (length + header_length));
 	}
 	
-	public void calculateChecksum(String ipv4Bits) {
+	public void calculateChecksum(String ipv4Bits, String message) {
 		
 		int lenIP = (ipv4Bits.length() / 8); 	// #IPv4 octets
 		int lenUDP = (header_length - 2);		// Length of UDP - checksum
+		int lenMsg = message.length();
+		
+		/* Checks for a message of odd length */
+		if (message.length() % 2 != 0) {
+			lenMsg++;
+		}
 		
 		// Creates the array of octets for the first three
 		// fields (ignores the checksum field)
-		String[] octets = new String[lenIP + lenUDP];
+		String[] octets = new String[lenIP + lenUDP + lenMsg];
 		
 		/* Adds IPv4 pseudo header bits to octet array */
 		for (int i = 0; i < lenIP; i++) {
@@ -45,6 +51,29 @@ public class UDP_Header {
 			int end = start + 8;
 			
 			octets[i + lenIP] = bits.substring(start, end);
+		}
+		
+		String messageBits = "";
+		
+		/* Convert message into bit string */
+		for (int i = 0; i < message.length(); i++) {
+			int ascii = (int) message.charAt(i);
+			String binary = Integer.toBinaryString(ascii);
+			binary = String.format("%8s", binary).replace(' ', '0');
+			messageBits += binary;
+		}		
+		
+		/* Pads end of message with 0's if odd */
+		if (message.length() != lenMsg) {
+			messageBits += "00000000";
+		}
+		
+		/* Adds message bits into octet array */
+		for (int i = 0; i < lenMsg; i++) {
+			int start = i * 8;
+			int end = start + 8;
+			
+			octets[i + lenIP + lenUDP] = messageBits.substring(start, end);
 		}
 		
 		String sum = new String(new char[16]).replace("\0", "0");

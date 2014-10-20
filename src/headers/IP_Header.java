@@ -3,8 +3,6 @@ package headers;
 import java.net.InetAddress;
 import java.util.Random;
 
-import com.sun.org.apache.xpath.internal.compiler.PsuedoNames;
-
 /********************************************************************
  * IP_Header.java
  *
@@ -18,15 +16,12 @@ public class IP_Header {
 
 	/** Length in bytes */
 	private final int header_length = 20;
-	
-	private int totalLength;
-	
+		
 	/** Bit string representing this header. */
 	private String bits;
 	
 	public IP_Header() {
 		bits = new String(new char[header_length * 8]).replace("\0", "0");
-		totalLength = header_length;
 		setupHeader();
 	}
 	
@@ -114,7 +109,6 @@ public class IP_Header {
 	
 	public void setDataSize(int length) {
 		length += header_length;
-		totalLength = length;
 		insertData(16, 32, length);
 	}
 	
@@ -164,6 +158,7 @@ public class IP_Header {
 	}
 	
 	public String getBitString() {
+		calculateChecksum();
 		return bits;
 	}
 }
