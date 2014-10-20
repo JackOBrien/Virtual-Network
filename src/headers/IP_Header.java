@@ -151,9 +151,6 @@ public class IP_Header {
 		// Adds protocol padded by zeros
 		pseudoBits += "00000000" + bits.substring(72, 80);
 		
-		// Adds the length
-		pseudoBits += bits.substring(16, 32);
-		
 		return pseudoBits;
 	}
 	

@@ -24,6 +24,9 @@ public class UDP_Header {
 	
 	public void calculateChecksum(String ipv4Bits, String message) {
 		
+		// Add length to IPv4 Pseudo Header
+		ipv4Bits += bits.substring(32, 48);
+		
 		int lenIP = (ipv4Bits.length() / 8); 	// #IPv4 octets
 		int lenUDP = (header_length - 2);		// Length of UDP - checksum
 		int lenMsg = message.length();
@@ -113,10 +116,6 @@ public class UDP_Header {
 		sum = sum.replace('1', '2');
 		sum = sum.replace('0', '1');
 		sum = sum.replace('2', '0');
-
-		int iSum = Integer.parseInt(sum, 2);
-		iSum += 20;
-		sum = Integer.toBinaryString(iSum);
 		
 		insertData(48, 64, Integer.parseInt(sum, 2));
 	}
