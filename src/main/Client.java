@@ -14,6 +14,7 @@ import java.util.Arrays;
 public class Client {
 
 	private final int PORT = 1618;
+	private final int VIRTUAL_PORT = 4529;
 	
 	private DatagramSocket clientSocket;
 	
@@ -55,8 +56,8 @@ public class Client {
 		ipH.setDataSize(message.length() + udpH.getLength());
 		
 		// Set the ports
-		udpH.setSrcPort(PORT);
-		udpH.setDstPort(PORT);
+		udpH.setSrcPort(VIRTUAL_PORT);
+		udpH.setDstPort(VIRTUAL_PORT);
 		
 		// Set the UDP header data length field
 		udpH.setDataLength(message.length());
@@ -88,13 +89,6 @@ public class Client {
 		
 		for (int i = packetLength; i < bytes.length; i++) {
 			bytes[i] = messageData[i-packetLength];
-		}
-		
-		// TODO : Remove these
-		System.out.println(Arrays.toString(bytes));
-		
-		for (byte b : bytes) {
-			System.out.print(Integer.toHexString(((int) b ) & 0xFF) + ", ");
 		}
 		
 		return bytes;
