@@ -49,7 +49,7 @@ public class UDP_Header {
 		for (int i = 0; i < lenUDP; i++) {
 			int start = i * 8;
 			int end = start + 8;
-			
+						
 			octets[i + lenIP] = bits.substring(start, end);
 		}
 		
@@ -85,6 +85,11 @@ public class UDP_Header {
 			
 			// Converts two octets into 16 bit value
 			value = octets[i] + octets[i + 1];
+			
+//			TODO REMOVE THESE
+//			System.out.print("V: " + Integer.parseInt(octets[i], 2) + " " + Integer.parseInt(octets[i+1], 2));
+//			System.out.println(" : " + Integer.parseInt((octets[i] + octets[i+1]), 2));
+//			System.out.println("Value:\t" + value);
 
 			// Adds value to the current sum
 			int s = Integer.parseInt(sum, 2) + Integer.parseInt(value, 2);
@@ -102,13 +107,17 @@ public class UDP_Header {
 				sum = Integer.toBinaryString(s);
 				sum = String.format("%16s", sum).replace(' ', '0');
 			}
-			
+			System.out.println("\t\tSum:\t" + sum + " : " + Integer.parseInt(sum, 2));
 		}
 
 		sum = sum.replace('1', '2');
 		sum = sum.replace('0', '1');
 		sum = sum.replace('2', '0');
 
+		int iSum = Integer.parseInt(sum, 2);
+		iSum += 20;
+		sum = Integer.toBinaryString(iSum);
+		
 		insertData(48, 64, Integer.parseInt(sum, 2));
 	}
 	
