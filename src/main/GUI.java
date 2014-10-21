@@ -40,7 +40,7 @@ public class GUI {
 	 * current dst. */
 	private JMenuBar menuBar;
 	
-	/** Label displaying the IPv4 address of the current destiniation. */
+	/** Label displaying the IPv4 address of the current destination. */
 	private JLabel ipLabel;
 	
 	/** Monospaced size 12 font. */

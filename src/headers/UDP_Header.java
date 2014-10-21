@@ -1,27 +1,64 @@
 package headers;
 
+/********************************************************************
+ * UDP_Header.java
+ *
+ * @author Jack O'Brien
+ * @author Megan Maher
+ * @author Tyler McCarthy
+ *
+ * @version Oct 20, 2014
+ *******************************************************************/
 public class UDP_Header {
 
+	/** The UDP header length is 8 bytes. */
 	private final int header_length = 8;
 	
+	/** Bit string representing this header. */
 	String bits;
 	
+	/****************************************************************
+	 * Constructor for this UDP_Header. Instantates the bit string
+	 * to be 8 bytes worth of zeros.
+	 ***************************************************************/
 	public UDP_Header() {
 		bits = new String(new byte[header_length * 8]).replace("\0", "0");
 	}
 	
+	/****************************************************************
+	 * Sets the source port.
+	 * 
+	 * @param srcPort the source port number to be inserted.
+	 ***************************************************************/
 	public void setSrcPort(int srcPort) {
 		insertData(0, 16, srcPort);
 	}
 	
+	/****************************************************************
+	 * Sets the destination port.
+	 * 
+	 * @param dstPort the destination port number to be inserted.
+	 ***************************************************************/
 	public void setDstPort(int dstPort) {
 		insertData(16, 32, dstPort);
 	}
 	
+	/****************************************************************
+	 * Sets the UDP length field.
+	 * 
+	 * @param length number of bytes in the data field.
+	 ***************************************************************/
 	public void setDataLength(int length) {
 		insertData(32, 48, (length + header_length));
 	}
 	
+	/****************************************************************
+	 * Calculates and inserts the UDP checksum.
+	 * 
+	 * @param ipv4Bits the bit string representing the IPv4 pseudo
+	 * header not including the length field.
+	 * @param message the plain text message.
+	 ***************************************************************/
 	public void calculateChecksum(String ipv4Bits, String message) {
 		
 		// Add length to IPv4 Pseudo Header
@@ -114,20 +151,39 @@ public class UDP_Header {
 		insertData(48, 64, Integer.parseInt(sum, 2));
 	}
 	
+	/****************************************************************
+	 * Inserts the given data into the bit string at the given location.
+	 * 
+	 * @param start Starting index to be inserted (inclusive).
+	 * @param end Ending index to be inserted (exclusive).
+	 * @param data the data to be inserted.
+	 ***************************************************************/
 	private void insertData(int start, int end, int data) {
-		String dataStr = Integer.toString(data, 2);
+
+		// Converts data to binary string
+		String dataStr = Integer.toBinaryString(data);
 		int length = end - start;
-		int bufferLength = length - dataStr.length();
+		
+		// Pads the binary string with 0's to fit in the given range
+		int bufferLength = (length - dataStr.length());
 		String binary = new String(new char[length]).replace("\0", "0");
 		binary = binary.substring(0, bufferLength) + dataStr;
-
+		
+		// Adds the binary string of data into the main bit string at
+		// the given location
 		bits = bits.substring(0, start) + binary + bits.substring(end);
 	}
 
+	/****************************************************************
+	 * @return the length in bytes of this header.
+	 ***************************************************************/
 	public int getLength() {
 		return header_length;
 	}
 	
+	/****************************************************************
+	 * @return the bit string representation of this header.
+	 ***************************************************************/
 	public String getBitString() {
 		return bits;
 	}

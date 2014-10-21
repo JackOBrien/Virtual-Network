@@ -10,7 +10,7 @@ import java.util.Random;
  * @author Megan Maher
  * @author Tyler McCarthy
  *
- * @version Oct 14, 2014
+ * @version Oct 20, 2014
  *******************************************************************/
 public class IP_Header {
 
@@ -20,11 +20,23 @@ public class IP_Header {
 	/** Bit string representing this header. */
 	private String bits;
 	
+	/****************************************************************
+	 * Default constructor for IP_Header. Sets all the default values
+	 * into the bit string representing this header.
+	 ***************************************************************/
 	public IP_Header() {
 		bits = new String(new char[header_length * 8]).replace("\0", "0");
 		setupHeader();
 	}
 	
+	/****************************************************************
+	 * Sets all the default values of the IPv4 Header.
+	 * Version: 4
+	 * IHL: 20
+	 * ID: Random int between 0 and 2^16 - 1
+	 * TTL: 64
+	 * Protocol: 17 (UDP)
+	 ***************************************************************/
 	private void setupHeader() {
 		int version = 4;
 		insertData(0, 4, version);
@@ -42,18 +54,31 @@ public class IP_Header {
 		insertData(72, 80, protocol);
 	}
 	
+	/****************************************************************
+	 * Inserts the given data into the bit string at the given location.
+	 * 
+	 * @param start Starting index to be inserted (inclusive).
+	 * @param end Ending index to be inserted (exclusive).
+	 * @param data the data to be inserted.
+	 ***************************************************************/
 	private void insertData(int start, int end, int data) {
-		String dataStr = Integer.toString(data, 2);
+		
+		// Converts data to binary string
+		String dataStr = Integer.toBinaryString(data);
 		int length = end - start;
+		
+		// Pads the binary string with 0's to fit in the given range
 		int bufferLength = (length - dataStr.length());
 		String binary = new String(new char[length]).replace("\0", "0");
 		binary = binary.substring(0, bufferLength) + dataStr;
+		
+		// Adds the binary string of data into the main bit string at
+		// the given location
 		bits = bits.substring(0, start) + binary + bits.substring(end);
 	}
 	
 	/****************************************************************
-	 * @param udpBits bit string containing the UDP header data
-	 * @param message String of ASCII text containing the message
+	 * Calculates the IPv4 checksum.
 	 ***************************************************************/
 	public void calculateChecksum() {
 		String[] octets = new String[header_length];
@@ -98,51 +123,72 @@ public class IP_Header {
 			}
 		}
 		
+		// Flips the bits 
 		sum = sum.replace('1', '2');
 		sum = sum.replace('0', '1');
 		sum = sum.replace('2', '0');
-						
-		System.out.println("IP Checksum: " + Integer.toHexString(Integer.parseInt(sum, 2)));
-		
+								
 		insertData(80, 96, Integer.parseInt(sum, 2));
 	}
 	
+	/****************************************************************
+	 * Sets the length field of the IPv4 header. Adds the header length
+	 * the the given length.
+	 * 
+	 * @param length Number of bytes that follow the IPv4 header.
+	 ***************************************************************/
 	public void setDataSize(int length) {
 		length += header_length;
 		insertData(16, 32, length);
 	}
 	
+	/****************************************************************
+	 * Inserts the given IPv4 address into the Source IP field.
+	 * 
+	 * @param srcIP the source IPv4 address to be inserted.
+	 ***************************************************************/
 	public void setSource(InetAddress srcIP) {
-		String[] ipStrAtt = srcIP.getHostAddress().split("\\.");
+		String[] ipStrArr = srcIP.getHostAddress().split("\\.");
 		
 		// First index of the source IP field
 		int srcIndex = 96;
 		
 		/* Adds all elements of the IP to the bit string */
-		for (int i = 0; i < ipStrAtt.length; i++) {
+		for (int i = 0; i < ipStrArr.length; i++) {
 			int start = srcIndex + (i * 8);
 			int end = start + 8;
 			
-			insertData(start, end, Integer.parseInt(ipStrAtt[i]));
+			insertData(start, end, Integer.parseInt(ipStrArr[i]));
 		}
 		
 	}
 	
+	/****************************************************************
+	 * Inserts the given IPv4 address into the Destination IP field.
+	 * 
+	 * @param dstIP the destination IPv4 address to be inserted.
+	 ***************************************************************/
 	public void setDestination(InetAddress dstIP) {
-		String[] ipStrAtt = dstIP.getHostAddress().split("\\.");
+		String[] ipStrArr = dstIP.getHostAddress().split("\\.");
 
 		// First index of the destination IP field
 		int srcIndex = 128;
 
 		/* Adds all elements of the IP to the bit string */
-		for (int i = 0; i < ipStrAtt.length; i++) {
+		for (int i = 0; i < ipStrArr.length; i++) {
 			int start = srcIndex + (i * 8);
 			int end = start + 8;
 
-			insertData(start, end, Integer.parseInt(ipStrAtt[i]));
+			insertData(start, end, Integer.parseInt(ipStrArr[i]));
 		}
 	}
 	
+	/****************************************************************
+	 * Returns a bit string of most of the IPv4 Pseudo Header for 
+	 * the UDP checksum calculation. The length field is NOT included.
+	 * 
+	 * @return Bit string of the pseudo header with out the length field.
+	 ***************************************************************/
 	public String getPseudoHeader() {
 		
 		// Adds the source then destination addresses
@@ -154,6 +200,12 @@ public class IP_Header {
 		return pseudoBits;
 	}
 	
+	/****************************************************************
+	 * Calculates the checksum and returns the bit string which
+	 * represents this header.
+	 * 
+	 * @return the bit string representing this header.
+	 ***************************************************************/
 	public String getBitString() {
 		calculateChecksum();
 		return bits;
