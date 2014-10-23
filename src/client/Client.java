@@ -3,12 +3,18 @@ package client;
 import headers.IP_Header;
 import headers.UDP_Header;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /********************************************************************
  * CIS 457-10 Project 4
@@ -30,6 +36,15 @@ public class Client {
 	 * client is 4529. */
 	private final int VIRTUAL_PORT = 4529;
 	
+	/** Path to the configuration files. */
+	private final String PATH = "src/config/";
+	
+	private int host_number;
+	
+	private InetAddress srcAddr;
+	
+	private InetAddress realDst;
+	
 	/** The socket used by this client. */
 	private DatagramSocket clientSocket;
 	
@@ -39,13 +54,18 @@ public class Client {
 	 * @throws SocketException if the socket is unable to be created.
 	 * Most likely the port is already in use.
 	 ***************************************************************/
-	public Client() throws SocketException {
+	public Client(int host_number) throws SocketException, Exception {
+		this.host_number = host_number;
+		
+		readConfigFile();
+		
 		clientSocket = new DatagramSocket(PORT);
 	}
 	
 	/****************************************************************
-	 * Sends the given message to the given IPv4 address. The
-	 * message is encapsulated with a IPv4 and UDP layer.
+	 * Sends the given message to the IPv4 address given by the
+	 * configuration file. The message is encapsulated with an 
+	 * IPv4 and UDP layer.
 	 * 
 	 * @param message plain text message to send.
 	 * @param dstAddr destination IPv4 address.
@@ -54,7 +74,7 @@ public class Client {
 		byte[] data = buildPacket(message, dstAddr);	
 		
 		DatagramPacket packet = 
-				new DatagramPacket(data, data.length, dstAddr, PORT);
+				new DatagramPacket(data, data.length, realDst, PORT);
 		
 		try {
 			clientSocket.send(packet);
@@ -130,5 +150,37 @@ public class Client {
 		}
 		
 		return bytes;
+	}
+	
+	private void readConfigFile() throws Exception {
+		String path = "host-" + host_number;
+		
+		ArrayList<InetAddress> ipArr = new ArrayList<InetAddress>();
+		
+		BufferedReader br = new BufferedReader(new FileReader(path));
+		String line;
+		
+		while ((line = br.readLine()) != null) {
+			String regex = "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b";
+			
+			Pattern pattern = Pattern.compile(regex);
+			Matcher matcher = pattern.matcher(line);
+			
+			/* Checks if an IP has been found. */
+			if (matcher.find()) {
+				String ipStr = matcher.group(0);
+				InetAddress ip = InetAddress.getByName(ipStr);
+				ipArr.add(ip);
+			}
+		}
+		
+		br.close();
+		
+		if (ipArr.size() < 2) {
+			throw new Exception("Improper configuration file format.");
+		}
+		
+		srcAddr = ipArr.get(0);
+		realDst = ipArr.get(1);		
 	}
 }
