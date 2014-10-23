@@ -1,4 +1,4 @@
-package main;
+package client;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -22,7 +22,7 @@ import javax.swing.*;
  * 
  * @version Oct 15, 2014
  *******************************************************************/
-public class GUI {
+public class ClientGUI {
 	
 	/** Image of a globe to be applied to the frame. */
 	private Image globe;
@@ -53,7 +53,7 @@ public class GUI {
 	/****************************************************************
 	 * Default constructor for the GUI.
 	 ***************************************************************/
-	public GUI(Client client) {
+	public ClientGUI(Client client) {
 		this.client = client;
 		
 		monospaced = new Font("monospaced", Font.PLAIN, 12);
@@ -250,7 +250,7 @@ public class GUI {
 			return;
 		}
 		
-		new GUI(client);
+		new ClientGUI(client);
 	}
 	
 	/* Inner class to create the set destination window */

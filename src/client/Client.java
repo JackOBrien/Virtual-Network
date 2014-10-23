@@ -1,4 +1,4 @@
-package main;
+package client;
 
 import headers.IP_Header;
 import headers.UDP_Header;
