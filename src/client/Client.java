@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * @author Megan Maher
  * @author Tyler McCarthy
  *
- * @version Oct 20, 2014
+ * @version Oct 24, 2014
  *******************************************************************/
 public class Client {
 
@@ -37,7 +37,7 @@ public class Client {
 	private final int VIRTUAL_PORT = 4529;
 	
 	/** Path to the configuration files. */
-	private final String PATH = "src/config/";
+	private final String PATH = "config/";
 	
 	private int host_number;
 	
@@ -54,12 +54,14 @@ public class Client {
 	 * @throws SocketException if the socket is unable to be created.
 	 * Most likely the port is already in use.
 	 ***************************************************************/
-	public Client(int host_number) throws SocketException, Exception {
+	public Client() throws SocketException {		
+		clientSocket = new DatagramSocket(PORT);
+	}
+	
+	public void setHostNumber(int host_number) throws Exception {
 		this.host_number = host_number;
 		
 		readConfigFile();
-		
-		clientSocket = new DatagramSocket(PORT);
 	}
 	
 	/****************************************************************
@@ -153,7 +155,7 @@ public class Client {
 	}
 	
 	private void readConfigFile() throws Exception {
-		String path = "host-" + host_number;
+		String path = PATH + "host-" + host_number + ".txt";
 		
 		ArrayList<InetAddress> ipArr = new ArrayList<InetAddress>();
 		

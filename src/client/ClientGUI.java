@@ -10,6 +10,8 @@ import java.net.UnknownHostException;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /********************************************************************
  * GUI.java
@@ -46,6 +48,10 @@ public class ClientGUI {
 	/** Monospaced size 12 font. */
 	private Font monospaced;
 	
+	private int host_number;
+	
+	private boolean gotValidIP;
+	
 	private InetAddress dstAddr;
 	
 	private Client client;
@@ -57,6 +63,9 @@ public class ClientGUI {
 		this.client = client;
 		
 		monospaced = new Font("monospaced", Font.PLAIN, 12);
+		
+		gotValidIP = false;
+		host_number = 1;
 		
 		setupMenu();
 		setupFrame();
@@ -104,7 +113,7 @@ public class ClientGUI {
 
 		/* Attempts to read the image file. */
 		try {
-			globe = ImageIO.read(new File("src/main/globe.png"));
+			globe = ImageIO.read(new File("src/client/globe.png"));
 		} catch (IOException e) {
 			throw new RuntimeException("Icon resource not found.");
 		}
@@ -207,11 +216,24 @@ public class ClientGUI {
 					
 					// Re prompts the user based on whether or not we
 					// already have an IP.
-					setDestination(currentLabel.isEmpty(), title);
+					setDestination(!gotValidIP, title);
 					return;
 				}
 				
 				dstAddr = ip;
+				
+				if (!gotValidIP) {
+					try {
+						client.setHostNumber(host_number);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+						String title = "Invalid config file for Host " +
+								host_number;
+						setDestination(true, title);
+					}
+				}
+				
+				gotValidIP = true;
 				
 				// Updates label text to the new IP address
 				ipLabel.setText("Dst IP: " + dstAddr.getHostAddress() + "   ");
@@ -240,7 +262,6 @@ public class ClientGUI {
 	};
 	
 	public static void main(String[] args) {
-		
 		Client client = null;
 		try {
 			client = new Client();
@@ -254,10 +275,13 @@ public class ClientGUI {
 	}
 	
 	/* Inner class to create the set destination window */
-	private class DestinationDialog extends JDialog implements ActionListener{
+	private class DestinationDialog extends JDialog implements ActionListener
+		, ChangeListener {
 		
 		/** Default serial version UID to satisfy eclipse */
 		private static final long serialVersionUID = 1L;
+		
+		private JSpinner spin;
 
 		/****************************************************************
 		 * Constructor which allows for a user specified title.
@@ -312,7 +336,7 @@ public class ClientGUI {
 			field.setFont(monospaced);
 			field.setPreferredSize(preferred);
 					
-			// Sets up exit.cancel button
+			// Sets up exit/cancel button
 			JButton b = new JButton();
 			b.setOpaque(true);
 			b.setBackground(Color.LIGHT_GRAY);
@@ -322,9 +346,19 @@ public class ClientGUI {
 			b.setFocusable(false);
 			
 			/* Switches the name of the button based on 
-			 * the "first" parameter */
+			 * the "first" parameter. Also adds host_number spinner. */
 			String name = "Cancel";
 			if (first) {
+				SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 4, 1);
+				spin = new JSpinner(model);
+				
+				spin.addChangeListener(this);
+				
+				panel.add(spin, BorderLayout.EAST);
+				
+				if (!title.getText().startsWith("Invalid"))
+					title.setText("Set Destination IP and Host Number");
+				panel.setPreferredSize(new Dimension(215, 70));
 				name = "Exit";
 			}
 			
@@ -349,6 +383,11 @@ public class ClientGUI {
 		public void actionPerformed(ActionEvent e) {
 			textField.requestFocus();
 			dispose();
+		}
+
+		@Override
+		public void stateChanged(ChangeEvent e) {
+			host_number = (int) spin.getValue();
 		}
 	}
 }
