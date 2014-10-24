@@ -128,7 +128,9 @@ public class ClientGUI {
 		
 		// Adds components
 		frame.setJMenuBar(menuBar);
-		frame.add(new JScrollPane(textArea));
+		frame.add(new JScrollPane(textArea,
+				ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER));
 		frame.add(textField, BorderLayout.PAGE_END);
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -142,8 +144,13 @@ public class ClientGUI {
 	 ***************************************************************/
 	private void setupTextArea() {
 		textArea = new JTextArea(15, 72);
+		
+		textArea.setLineWrap(true);
+		textArea.setWrapStyleWord(true);
+		
 		textArea.setBackground(new Color(9, 10, 10));
 		textArea.setForeground(new Color(142, 230, 242));
+		
 		textArea.setFont(monospaced);
 		textArea.setEditable(false);
 	}
@@ -153,10 +160,13 @@ public class ClientGUI {
 	 ***************************************************************/
 	private void setupTextField() {
 		textField = new JTextField();
+		
 		textField.addActionListener(al);
 		textField.setActionCommand("mainField");
+		
 		textField.setBackground(new Color(30, 31, 31));
 		textField.setForeground(new Color(145, 245, 245));
+		
 		textField.setFont(monospaced);
 	}
 	
@@ -251,6 +261,9 @@ public class ClientGUI {
 				if (textField.getText().isEmpty()) return;
 
 				String message = textField.getText();
+				message = "- Sent to <" + dstAddr.getHostAddress() +
+						"> - " + message;
+				
 				
 				// Appends text inputed by used to text area.
 				textArea.append(message + "\n");
