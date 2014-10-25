@@ -60,6 +60,100 @@ public class UDP_Header {
 	 * @param message the plain text message.
 	 ***************************************************************/
 	public void calculateChecksum(String ipv4Bits, String message) {
+		int checksum = calculateChecksum(bits, ipv4Bits, message);
+		
+		insertData(48, 64, checksum);
+	}
+	
+	/****************************************************************
+	 * Inserts the given data into the bit string at the given location.
+	 * 
+	 * @param start Starting index to be inserted (inclusive).
+	 * @param end Ending index to be inserted (exclusive).
+	 * @param data the data to be inserted.
+	 ***************************************************************/
+	private void insertData(int start, int end, int data) {
+
+		// Converts data to binary string
+		String dataStr = Integer.toBinaryString(data);
+		int length = end - start;
+		
+		// Pads the binary string with 0's to fit in the given range
+		int bufferLength = (length - dataStr.length());
+		String binary = new String(new char[length]).replace("\0", "0");
+		binary = binary.substring(0, bufferLength) + dataStr;
+		
+		// Adds the binary string of data into the main bit string at
+		// the given location
+		bits = bits.substring(0, start) + binary + bits.substring(end);
+	}
+
+	/****************************************************************
+	 * @return the length in bytes of this header.
+	 ***************************************************************/
+	public int getLength() {
+		return header_length;
+	}
+	
+	/****************************************************************
+	 * @return the bit string representation of this header.
+	 ***************************************************************/
+	public String getBitString() {
+		return bits;
+	}
+	
+	private static String bytesToBitString(byte[] data, int start, int end) {
+		
+		String bitStr = "";
+		
+		for (int i = start; i < end; i++) {
+			String s = Integer.toBinaryString(data[i] & 0xFF);
+			s = String.format("%8s", s).replace(' ', '0');
+			bitStr += s;
+		}
+		
+		return bitStr;
+	}
+	
+	private static String bytesToString(byte[] data, int start, int end) {
+		
+		String str = "";
+		
+		for (int i = start; i < end; i++) {
+			str += (char) (data[i] & 0xFF);
+		}
+		
+		return str;
+	}
+	
+	
+	public static int calculateChecksum(byte[] data, int start, int end) {
+		byte[] pseudoHeader = new byte[12];
+		int index = start - 8; // Index of source from IPv4 above UDP
+		
+		/* Adds the source and destination to the pseudo header */
+		for (int i = 0; i < 8; i++) {
+			pseudoHeader[i] = data[index + i];
+		}
+		
+		// Protocol
+		pseudoHeader[10] = data[start - 11]; 
+		
+		// UDP length
+		pseudoHeader[11] = data[start + 4];
+		pseudoHeader[12] = data[start + 5];
+		
+		String ipBits = bytesToBitString(pseudoHeader, 0, pseudoHeader.length);
+		String udpBits = bytesToBitString(data, start, end);
+		String message = bytesToString(data, end, data.length);
+		
+		return calculateChecksum(udpBits, ipBits, message);
+	}
+	
+	private static int calculateChecksum(String bits, String ipv4Bits, 
+			String message) {
+		
+		int header_length = 8;
 		
 		// Add length to IPv4 Pseudo Header
 		ipv4Bits += bits.substring(32, 48);
@@ -148,44 +242,7 @@ public class UDP_Header {
 		sum = sum.replace('0', '1');
 		sum = sum.replace('2', '0');
 		
-		insertData(48, 64, Integer.parseInt(sum, 2));
-	}
-	
-	/****************************************************************
-	 * Inserts the given data into the bit string at the given location.
-	 * 
-	 * @param start Starting index to be inserted (inclusive).
-	 * @param end Ending index to be inserted (exclusive).
-	 * @param data the data to be inserted.
-	 ***************************************************************/
-	private void insertData(int start, int end, int data) {
-
-		// Converts data to binary string
-		String dataStr = Integer.toBinaryString(data);
-		int length = end - start;
-		
-		// Pads the binary string with 0's to fit in the given range
-		int bufferLength = (length - dataStr.length());
-		String binary = new String(new char[length]).replace("\0", "0");
-		binary = binary.substring(0, bufferLength) + dataStr;
-		
-		// Adds the binary string of data into the main bit string at
-		// the given location
-		bits = bits.substring(0, start) + binary + bits.substring(end);
-	}
-
-	/****************************************************************
-	 * @return the length in bytes of this header.
-	 ***************************************************************/
-	public int getLength() {
-		return header_length;
-	}
-	
-	/****************************************************************
-	 * @return the bit string representation of this header.
-	 ***************************************************************/
-	public String getBitString() {
-		return bits;
+		return Integer.parseInt(sum, 2);
 	}
 	
 }
