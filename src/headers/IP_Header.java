@@ -81,54 +81,9 @@ public class IP_Header {
 	 * Calculates the IPv4 checksum.
 	 ***************************************************************/
 	public void calculateChecksum() {
-		String[] octets = new String[header_length];
+		int checksum = calculateChecksum(bits);
 		
-		/* Adds the IP header to the octets array */
-		for (int i = 0; i < header_length; i++) {
-			int start = i * 8;
-			int end = start + 8;
-			
-			octets[i] = bits.substring(start, end);
-		}
-				
-		// Set checksum to 0
-		octets[10] = "00000000";
-		octets[11] = "00000000";
-		
-		String sum = new String(new char[16]).replace("\0", "0");
-		
-		/* Loops through every pair of octets and adds them to the sum
-		 * as a 16 bit value */
-		for (int i = 0; i < octets.length; i += 2) {
-			String value = "";
-			
-			// Converts two octets into 16 bit value
-			value = octets[i] + octets[i + 1];
-						
-			// Adds value to the current sum
-			int s = Integer.parseInt(sum, 2) + Integer.parseInt(value, 2);
-			sum = Integer.toBinaryString(s);
-			sum = String.format("%16s", sum).replace(' ', '0');
-			
-			// Handles 16-bit carry correction
-			if (sum.length() > 16) {
-				String carryStr = sum.substring(0, sum.length() - 16);
-				int carry = Integer.parseInt(carryStr, 2);
-				
-				s = Integer.parseInt(sum.substring(carryStr.length()), 2);
-				s += carry;
-				
-				sum = Integer.toBinaryString(s);
-				sum = String.format("%16s", sum).replace(' ', '0');
-			}
-		}
-		
-		// Flips the bits 
-		sum = sum.replace('1', '2');
-		sum = sum.replace('0', '1');
-		sum = sum.replace('2', '0');
-								
-		insertData(80, 96, Integer.parseInt(sum, 2));
+		insertData(80, 96, checksum);
 	}
 	
 	/****************************************************************
@@ -209,5 +164,81 @@ public class IP_Header {
 	public String getBitString() {
 		calculateChecksum();
 		return bits;
+	}
+	
+	private static String bytesToBitString(byte[] data, int start, int end) {
+		
+		String bitStr = "";
+		
+		for (int i = start; i < end; i++) {
+			String s = Integer.toBinaryString(data[i] & 0xFF);
+			s = String.format("%8s", s).replace(' ', '0');
+			bitStr += s;
+		}
+		
+		return bitStr;
+	}
+	
+	public static int calculateChecksum(byte[] data, int start, int end) {
+		String bitStr = bytesToBitString(data, start, end);
+		
+		return calculateChecksum(bitStr);
+	}
+	
+	public static int calculateChecksum(String bitString) {
+		
+		// Parses the header length in bytes
+		int header_length = 
+				Integer.parseInt(bitString.substring(4, 8), 2);
+		header_length *= 4;
+		
+		String[] octets = new String[header_length];
+		
+		/* Adds the IP header to the octets array */
+		for (int i = 0; i < header_length; i++) {
+			int start = i * 8;
+			int end = start + 8;
+			
+			octets[i] = bitString.substring(start, end);
+		}
+				
+		// Set checksum to 0
+		octets[10] = "00000000";
+		octets[11] = "00000000";
+		
+		String sum = new String(new char[16]).replace("\0", "0");
+		
+		/* Loops through every pair of octets and adds them to the sum
+		 * as a 16 bit value */
+		for (int i = 0; i < octets.length; i += 2) {
+			String value = "";
+			
+			// Converts two octets into 16 bit value
+			value = octets[i] + octets[i + 1];
+						
+			// Adds value to the current sum
+			int s = Integer.parseInt(sum, 2) + Integer.parseInt(value, 2);
+			sum = Integer.toBinaryString(s);
+			sum = String.format("%16s", sum).replace(' ', '0');
+			
+			// Handles 16-bit carry correction
+			if (sum.length() > 16) {
+				String carryStr = sum.substring(0, sum.length() - 16);
+				int carry = Integer.parseInt(carryStr, 2);
+				
+				s = Integer.parseInt(sum.substring(carryStr.length()), 2);
+				s += carry;
+				
+				sum = Integer.toBinaryString(s);
+				sum = String.format("%16s", sum).replace(' ', '0');
+			}
+		}
+		
+		// Flips the bits 
+		sum = sum.replace('1', '2');
+		sum = sum.replace('0', '1');
+		sum = sum.replace('2', '0');
+										
+		return Integer.parseInt(sum, 2);
 	}
 }
