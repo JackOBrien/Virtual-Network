@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.ArrayList;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 
 /********************************************************************
@@ -30,18 +31,32 @@ public class Router {
 	
 	private int router_number;
 	
+	/** HashMap where the Key is a prefix in the format: IPv4/prefix_length.
+	 * The value is the "real" IPv4 address associated with the prefix. */
 	private HashMap<String, InetAddress> prefixes;
 	
 	private DatagramSocket routerSocket;
 	
-	public Router() throws Exception {
+	/****************************************************************
+	 * Constructor for Router. Creates the router socket
+	 * 
+	 * @throws SocketException if the port is in use
+	 ***************************************************************/
+	public Router() throws SocketException {
 		routerSocket = new DatagramSocket(PORT);
-		
-		readPrefixes();
 	}
 	
-	public void setRouterNumber(int router_number) {
+	/****************************************************************
+	 * Sets the router number for this router and then reads the 
+	 * file which corresponds to the given number,
+	 * 
+	 * @param router_number the number of this router
+	 * @throws Exception if there is something wrong with the 
+	 * configuration file for the given router number
+	 ***************************************************************/
+	public void setRouterNumber(int router_number) throws Exception {
 		this.router_number = router_number;
+		readPrefixes();
 	}
 	
 	private DatagramPacket receivePacket() throws IOException {
@@ -62,11 +77,12 @@ public class Router {
 		validateChecksumIP(data, 28, 48);
 		validateChecksumUDP(data, 28, data.length);
 		
+		// First index of the virtual IPv4 Header
 		int virtualIP = 28;
 		
 		int TTL = (int) (data[virtualIP + 8] & 0xFF);
 		
-		/* Check the TTL */
+		/* Check if the TTL has expired*/
 		if (TTL <= 0) return;
 		
 		// Decrements the TTL
@@ -77,6 +93,7 @@ public class Router {
 		InetAddress realDstIP = null;
 		int prefixLength = 0;
 		
+		/* Finds the best matching prefix for the destination IP */
 		for (String prefix : prefixes.keySet()) {
 			if (dest.startsWith(prefix) & prefix.length() > prefixLength) {
 				realDstIP = prefixes.get(prefix);
@@ -84,6 +101,7 @@ public class Router {
 			}
 		}
 		
+		/* If no prefix match was found, the sender must be notified. */
 		if (realDstIP == null) {
 			// TODO: Send ICMP message
 			return;
@@ -127,25 +145,33 @@ public class Router {
 		}
 	}
 	
+	/****************************************************************
+	 * Reads the configuration file based on the router_number.
+	 * 
+	 * @throws Exception if there is any issue with the configuration
+	 * file. (not found, improperly formatted, etc.)
+	 ***************************************************************/
 	private void readPrefixes() throws Exception {
 		String path = PATH + "router-" + router_number + ".txt";
-		
-		ArrayList<InetAddress> ipArr = new ArrayList<InetAddress>();
-		
+				
 		BufferedReader br = new BufferedReader(new FileReader(path));
 		String line;
 		
+		/* Reads the file line-by-line */
 		while ((line = br.readLine()) != null) {
 			
+			/* Skips lines that don't start "prefix " */
 			if (!line.startsWith("prefix ")) continue;
 			
 			String[] splitStr = line.split(" ");
-			
+
+			/* Skips improperly formated lines */
 			if (splitStr.length != 3) continue;
 			
 			String key = splitStr[1];
 			String[] keySplit = key.split("/");
 			
+			/* Skips improperly formated prefixes */
 			if (keySplit.length != 2) continue;
 			
 			int prefixLength = Integer.parseInt(keySplit[1]);
@@ -153,14 +179,24 @@ public class Router {
 			
 			String[] ipSplit = keySplit[0].split("\\.");
 			
+			/* Skips improperly formatted IPv4 addresses in the prefix */
 			if (ipSplit.length != 4) continue;
 			key = "";
 			
+			/* Rebuilds prefix with only the relevant bytes. 
+			 * Example: "10.2.0.0/16" -> "10.2" */
 			for (int i = 0; i < prefixLength; i++) {
 				key += "." + ipSplit[i];
 			}
 			
-			InetAddress value = InetAddress.getByName(splitStr[2]);
+			InetAddress value = null;			
+			
+			/* Skips invalid IPv4 addresses */
+			try {
+				value = InetAddress.getByName(splitStr[2]);
+			} catch (UnknownHostException e) {
+				continue;
+			}
 			
 			prefixes.put(key.substring(1), value);
 		}
@@ -168,6 +204,14 @@ public class Router {
 		br.close();
 	}
 	
+	/****************************************************************
+	 * Converts the 4 bytes from the given starting index into
+	 * IPv4 format as a String.
+	 * 
+	 * @param data the byte array containing the IPv4 address.
+	 * @param start the index of the first byte of the address.
+	 * @return String representation of the address.
+	 ***************************************************************/
 	private String translateIP(byte[] data, int start) {
 		String ip = "";
 		
