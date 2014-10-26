@@ -101,25 +101,22 @@ public class Router {
 		System.out.println("\nReceived packet from " + 
 				recvPacket.getAddress().getHostAddress());
 		
-		int data_length = (int) (data[2] << 8 | (data[3] & 0xFF));
+		int data_length = (int) (((data[2] << 8) | (data[3] & 0xFF)) & 0xFFFF);
 		
 		// Validates the checksums
 		validateChecksumIP(data, 0, 20);
 		validateChecksumUDP(data, 20, data_length);
 		
-		// First index of the virtual IPv4 Header
-		int virtualIP = 28;
-		
-		int TTL = (int) (data[virtualIP + 8] & 0xFF);
+		int TTL = (int) (data[8] & 0xFF);
 		
 		/* Check if the TTL has expired*/
 		if (TTL <= 0) return;
 		
 		// Decrements the TTL
 		TTL--;
-		data[virtualIP + 8] = (byte) TTL;
+		data[8] = (byte) TTL;
 		
-		String dest = translateIP(data, virtualIP + 16);
+		String dest = translateIP(data, 16);
 		InetAddress realDstIP = null;
 		int prefixLength = 0;
 		
@@ -150,8 +147,8 @@ public class Router {
 		
 		int checksumIndex = start + 10;
 		
-		int storedChecksum = (data[checksumIndex] << 8) | 
-							 (data[checksumIndex + 1] & 0xFF);
+		int storedChecksum = (int) (((data[checksumIndex] << 8) | 
+							 (data[checksumIndex + 1] & 0xFF)) & 0xFFFF);
 		int calculatedChecksum = IP_Header.calculateChecksum(data, start, end);
 		
 		if (storedChecksum != calculatedChecksum) {
@@ -165,8 +162,8 @@ public class Router {
 		
 		int checksumIndex = start + 6;
 		
-		int storedChecksum = (data[checksumIndex] << 8) | 
-							 (data[checksumIndex + 1] & 0xFF);
+		int storedChecksum = (int) (((data[checksumIndex] << 8) | 
+							 (data[checksumIndex + 1] & 0xFF)) & 0xFFFF);
 		int calculatedChecksum = UDP_Header.calculateChecksum(data, start, end);
 		
 		if (storedChecksum != calculatedChecksum) {
