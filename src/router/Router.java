@@ -94,8 +94,12 @@ public class Router {
 		return recvPacket;
 	}
 	
-	public void handlePacket() throws IOException {
-		byte[] data = receivePacket().getData();
+	private void handlePacket() throws IOException {
+		DatagramPacket recvPacket = receivePacket();
+		byte[] data = recvPacket.getData();
+		
+		System.out.println("\nReceived packet from " + 
+				recvPacket.getAddress().getHostAddress());
 		
 		// Validates the checksums
 		validateChecksumIP(data, 0, 20);
@@ -248,6 +252,17 @@ public class Router {
 		return ip.substring(1);
 	}
 	
+	public void begin() {
+		while(true) {
+			try {
+				handlePacket();
+			} catch (IOException e) {
+				e.printStackTrace();
+				continue;
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
 		
 		System.out.print("Please input router number: ");
@@ -260,8 +275,10 @@ public class Router {
 		
 		System.out.println();
 		
+		Router router = null;
+		
 		try {
-			new Router(router_number);
+			router = new Router(router_number);
 		} catch (SocketException se) {
 			String message = "Port in use";
 			System.err.println(message);
@@ -274,5 +291,9 @@ public class Router {
 			String message = "Invalid configuration file";
 			System.err.println(message);
 		}
+		
+		if (router != null) 
+			router.begin();
+		
 	}
 }
