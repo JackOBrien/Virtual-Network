@@ -103,9 +103,7 @@ public class Router {
 		
 		// Validates the checksums
 		validateChecksumIP(data, 0, 20);
-		validateChecksumUDP(data, 20, 28);
-		validateChecksumIP(data, 28, 48);
-		validateChecksumUDP(data, 28, data.length);
+		validateChecksumUDP(data, 20, data.length);
 		
 		// First index of the virtual IPv4 Header
 		int virtualIP = 28;
