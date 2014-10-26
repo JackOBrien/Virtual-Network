@@ -113,7 +113,7 @@ public class ClientGUI {
 
 		/* Attempts to read the image file. */
 		try {
-			globe = ImageIO.read(new File("src/client/globe.png"));
+			globe = ImageIO.read(new File("/src/client/globe.png"));
 		} catch (IOException e) {
 			throw new RuntimeException("Icon resource not found.");
 		}

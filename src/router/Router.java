@@ -29,7 +29,7 @@ public class Router {
 	private final int PORT = 1618;
 	
 	/** Path to the configuration files. */
-	private final String PATH = "config/";
+	private final String PATH = "/config/";
 	
 	private int router_number;
 	
