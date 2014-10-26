@@ -128,7 +128,7 @@ public class UDP_Header {
 	
 	
 	public static int calculateChecksum(byte[] data, int start, int end) {
-		byte[] pseudoHeader = new byte[12];
+		byte[] pseudoHeader = new byte[10];
 		int index = start - 8; // Index of source from IPv4 above UDP
 		
 		/* Adds the source and destination to the pseudo header */
@@ -138,10 +138,6 @@ public class UDP_Header {
 		
 		// Protocol
 		pseudoHeader[9] = data[start - 11]; 
-		
-		// UDP length
-		pseudoHeader[10] = data[start + 4];
-		pseudoHeader[11] = data[start + 5];
 		
 		String ipBits = bytesToBitString(pseudoHeader, 0, pseudoHeader.length);
 		String udpBits = bytesToBitString(data, start, end);
