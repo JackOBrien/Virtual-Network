@@ -258,13 +258,11 @@ public class ClientGUI {
 				// Ignores blank lines
 				if (textField.getText().isEmpty()) return;
 
-				String message = textField.getText();
-				message = "- Sent to <" + dstAddr.getHostAddress() +
-						"> - " + message;
-				
+				String message = textField.getText();				
 				
 				// Appends text inputed by used to text area.
-				textArea.append(message + "\n");
+				textArea.append("- Sent to <" + dstAddr.getHostAddress() +
+						"> - " + message + "\n");
 				textField.setText("");
 				
 				client.sendMessage(message, dstAddr);

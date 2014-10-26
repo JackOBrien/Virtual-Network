@@ -12,6 +12,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +42,8 @@ public class Client {
 	private int host_number;
 		
 	private InetAddress realDst;
+	
+	private InetAddress srcIP;
 	
 	/** The socket used by this client. */
 	private DatagramSocket clientSocket;
@@ -72,6 +75,10 @@ public class Client {
 	public void sendMessage(String message, InetAddress dstAddr) {
 		byte[] data = buildPacket(message, dstAddr);	
 		
+		System.out.println(Arrays.toString(data));
+		
+		System.out.println(realDst.getHostAddress());
+		
 		DatagramPacket packet = 
 				new DatagramPacket(data, data.length, realDst, PORT);
 		
@@ -93,17 +100,8 @@ public class Client {
 		IP_Header ipH = new IP_Header();
 		UDP_Header udpH = new UDP_Header();
 		
-		InetAddress localAddress = null;
-		
-		/* Gets the IP address of the local host. */
-		try {
-			localAddress = InetAddress.getLocalHost();
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
-		
 		// Set the IP addresses
-		ipH.setSource(localAddress);
+		ipH.setSource(srcIP);
 		ipH.setDestination(dstAddr);
 		
 		// Set the IP header data length field
@@ -179,6 +177,7 @@ public class Client {
 			throw new Exception("Improper configuration file format.");
 		}
 		
+		srcIP = ipArr.get(0);
 		realDst = ipArr.get(1);		
 	}
 }

@@ -137,11 +137,11 @@ public class UDP_Header {
 		}
 		
 		// Protocol
-		pseudoHeader[10] = data[start - 11]; 
+		pseudoHeader[9] = data[start - 11]; 
 		
 		// UDP length
-		pseudoHeader[11] = data[start + 4];
-		pseudoHeader[12] = data[start + 5];
+		pseudoHeader[10] = data[start + 4];
+		pseudoHeader[11] = data[start + 5];
 		
 		String ipBits = bytesToBitString(pseudoHeader, 0, pseudoHeader.length);
 		String udpBits = bytesToBitString(data, start, end);
