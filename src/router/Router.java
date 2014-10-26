@@ -242,8 +242,8 @@ public class Router {
 	private String translateIP(byte[] data, int start) {
 		String ip = "";
 		
-		for (int i = start; i < 4; i++) {
-			ip += "." + Integer.toString((int) (data[i] & 0xFF));
+		for (int i = 0; i < 4; i++) {
+			ip += "." + Integer.toString((int) (data[i + start] & 0xFF));
 		}
 		
 		return ip.substring(1);

@@ -141,7 +141,7 @@ public class UDP_Header {
 		
 		String ipBits = bytesToBitString(pseudoHeader, 0, pseudoHeader.length);
 		String udpBits = bytesToBitString(data, start, end);
-		String message = bytesToString(data, end, data.length);
+		String message = bytesToString(data, start + 8, data.length);
 		
 		return calculateChecksum(udpBits, ipBits, message);
 	}
