@@ -135,7 +135,7 @@ public class Router {
 		}
 		
 		
-		DatagramPacket sendPkt = new DatagramPacket(data, data.length, 
+		DatagramPacket sendPkt = new DatagramPacket(data, data_length, 
 				realDstIP, PORT);
 		
 		/* Forwards the packet */
