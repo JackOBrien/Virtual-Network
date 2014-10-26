@@ -36,7 +36,7 @@ public class Client {
 	private final int VIRTUAL_PORT = 4529;
 	
 	/** Path to the configuration files. */
-	private final String PATH = "config/";
+	private final String PATH = "/config/";
 	
 	private int host_number;
 		
