@@ -101,9 +101,11 @@ public class Router {
 		System.out.println("\nReceived packet from " + 
 				recvPacket.getAddress().getHostAddress());
 		
+		int data_length = (int) (data[2] << 8 | (data[3] & 0xFF));
+		
 		// Validates the checksums
 		validateChecksumIP(data, 0, 20);
-		validateChecksumUDP(data, 20, data.length);
+		validateChecksumUDP(data, 20, data_length);
 		
 		// First index of the virtual IPv4 Header
 		int virtualIP = 28;
