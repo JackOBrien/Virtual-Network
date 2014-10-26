@@ -114,9 +114,7 @@ public class ClientGUI {
 		/* Attempts to read the image file. */
 		try {
 			globe = ImageIO.read(new File("src/client/globe.png"));
-		} catch (IOException e) {
-			throw new RuntimeException("Icon resource not found.");
-		}
+		} catch (IOException e) {}
 		
 		/* Sets the frame's icon the the globe image */
 		if (globe != null) {
