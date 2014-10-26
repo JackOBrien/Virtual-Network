@@ -4,7 +4,6 @@ import headers.IP_Header;
 import headers.UDP_Header;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -40,9 +39,7 @@ public class Client {
 	private final String PATH = "config/";
 	
 	private int host_number;
-	
-	private InetAddress srcAddr;
-	
+		
 	private InetAddress realDst;
 	
 	/** The socket used by this client. */
@@ -182,7 +179,6 @@ public class Client {
 			throw new Exception("Improper configuration file format.");
 		}
 		
-		srcAddr = ipArr.get(0);
 		realDst = ipArr.get(1);		
 	}
 }

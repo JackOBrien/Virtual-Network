@@ -4,6 +4,7 @@ import headers.IP_Header;
 import headers.UDP_Header;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -12,6 +13,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Scanner;
 
 /********************************************************************
  * Router.java
@@ -42,8 +44,32 @@ public class Router {
 	 * 
 	 * @throws SocketException if the port is in use
 	 ***************************************************************/
-	public Router() throws SocketException {
+	public Router(int router_number) throws SocketException, Exception {
 		routerSocket = new DatagramSocket(PORT);
+		
+		prefixes = new HashMap<String, InetAddress>();
+		
+		setRouterNumber(router_number);
+		
+		printWelcomeMessage();
+	}
+	
+	private void printWelcomeMessage() {
+		try {
+			System.out.println("-- Router started on " + 
+					InetAddress.getLocalHost().getHostAddress() + 
+					":" + PORT + " --\n");
+		} catch (UnknownHostException e) {}
+		
+		String msg = String.format("%15s   %-15s", "-Prefixes-","-Address-");
+		System.out.println(msg);
+		
+		for (String prefix : prefixes.keySet()) {
+			String dst = prefixes.get(prefix).getHostAddress();
+			msg = String.format("%14s -> %-15s", prefix, dst);
+			System.out.println(msg);
+		}
+		
 	}
 	
 	/****************************************************************
@@ -54,7 +80,7 @@ public class Router {
 	 * @throws Exception if there is something wrong with the 
 	 * configuration file for the given router number
 	 ***************************************************************/
-	public void setRouterNumber(int router_number) throws Exception {
+	private void setRouterNumber(int router_number) throws Exception {
 		this.router_number = router_number;
 		readPrefixes();
 	}
@@ -220,5 +246,33 @@ public class Router {
 		}
 		
 		return ip.substring(1);
+	}
+	
+	public static void main(String[] args) {
+		
+		System.out.print("Please input router number: ");
+		
+		int router_number = 0;
+		
+		Scanner scan = new Scanner(System.in);
+		router_number = scan.nextInt();
+		scan.close();
+		
+		System.out.println();
+		
+		try {
+			new Router(router_number);
+		} catch (SocketException se) {
+			String message = "Port in use";
+			System.err.println(message);
+		} catch (FileNotFoundException fnfe) {
+			String message = "File: router-" + router_number + 
+					".txt not found";
+			System.err.println(message);
+		} catch (Exception e) {
+			e.printStackTrace(); //TODO: Remove this
+			String message = "Invalid configuration file";
+			System.err.println(message);
+		}
 	}
 }
