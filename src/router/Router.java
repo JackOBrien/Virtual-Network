@@ -110,6 +110,7 @@ public class Router {
 		int TTL = (int) (data[8] & 0xFF);
 		
 		/* Check if the TTL has expired*/
+		// TODO: Print and send ICMP
 		if (TTL <= 0) return;
 		
 		// Decrements the TTL
@@ -134,16 +135,22 @@ public class Router {
 			return;
 		}
 		
+		System.out.println("Found prexif for " + dest + " -> " + 
+				realDstIP.getHostAddress());
+		
 		
 		DatagramPacket sendPkt = new DatagramPacket(data, data_length, 
 				realDstIP, PORT);
 		
 		/* Forwards the packet */
 		routerSocket.send(sendPkt);
+		
+		System.out.println("Sent message to " + realDstIP.getHostAddress());
 	}	
 	
 	private void validateChecksumIP(byte[] data, int start, int end) 
 			throws IOException {
+		System.out.print("Checking IP Checksum... ");
 		
 		int checksumIndex = start + 10;
 		
@@ -155,10 +162,13 @@ public class Router {
 			throw new IOException("Bad IP Checksum: Got " + storedChecksum + 
 					" Expected " + calculatedChecksum);
 		}
+		
+		System.out.println("Good");
 	}
 	
 	private void validateChecksumUDP(byte[] data, int start, int end) 
 			throws IOException {
+		System.out.print("Checking UDP Checksum... ");
 		
 		int checksumIndex = start + 6;
 		
@@ -170,6 +180,8 @@ public class Router {
 			throw new IOException("Bad UDP Checksum: Got " + storedChecksum + 
 					" Expected " + calculatedChecksum);
 		}
+		
+		System.out.println("Good");
 	}
 	
 	/****************************************************************

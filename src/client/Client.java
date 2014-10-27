@@ -10,9 +10,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,7 +62,7 @@ public class Client {
 		readConfigFile();
 	}
 	
-	public DatagramPacket receiveMessage() {
+	public String[] receiveMessage() {
 		byte[] buf = new byte[1024];
 
 		DatagramPacket packet = new DatagramPacket(buf, buf.length);
@@ -75,7 +73,38 @@ public class Client {
 			return null;
 		}
 
-		return packet;
+		int data_length = (int) (((buf[2] << 8) | (buf[3] & 0xFF)) & 0xFFFF);
+		
+		String message = "";
+		
+		for (int i = 28; i < data_length; i++) {
+			message += (char) buf[i];
+		}
+		
+		String[] srcAndMessage = new String[2];
+		
+		srcAndMessage[0] = translateIP(buf, 12);
+		srcAndMessage[1] = message;
+		
+		return srcAndMessage;
+	}
+	
+	/****************************************************************
+	 * Converts the 4 bytes from the given starting index into
+	 * IPv4 format as a String.
+	 * 
+	 * @param data the byte array containing the IPv4 address.
+	 * @param start the index of the first byte of the address.
+	 * @return String representation of the address.
+	 ***************************************************************/
+	private String translateIP(byte[] data, int start) {
+		String ip = "";
+		
+		for (int i = 0; i < 4; i++) {
+			ip += "." + Integer.toString((int) (data[i + start] & 0xFF));
+		}
+		
+		return ip.substring(1);
 	}
 	
 	/****************************************************************

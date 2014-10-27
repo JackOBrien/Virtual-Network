@@ -114,7 +114,7 @@ public class ClientGUI {
 
 		/* Attempts to read the image file. */
 		try {
-			globe = ImageIO.read(new File("src/client/globe.png"));
+			globe = ImageIO.read(new File("globe.png"));
 		} catch (IOException e) {}
 		
 		/* Sets the frame's icon the the globe image */
@@ -190,21 +190,14 @@ public class ClientGUI {
 	}
 	
 	public void receive() {
-		DatagramPacket packet = client.receiveMessage();
+		String[] data = client.receiveMessage();
 		
-		if (packet == null) return;
+		if (data == null) return;
 		
-		byte[] data = packet.getData();
-		int data_length = (int) (((data[2] << 8) | (data[3] & 0xFF)) & 0xFFFF);
+		String src = data[0];
+		String message = data[1];
 		
-		String message = "";
-		
-		for (int i = 28; i < data_length; i++) {
-			message += (char) data[i];
-		}
-		
-		textArea.append("- Got from <" + packet.getAddress().getHostAddress() +
-				"> - " + message + "\n");
+		textArea.append("- Got from <" + src + "> - " + message + "\n");
 	}
 	
 	/* Action listener to handle user input from text field. */
@@ -390,7 +383,7 @@ public class ClientGUI {
 				panel.add(spin, BorderLayout.EAST);
 				
 				if (!title.getText().startsWith("Invalid"))
-					title.setText("Set Destination IP and Host Number");
+					title.setText("Set Dst IP and Host Number");
 				panel.setPreferredSize(new Dimension(215, 70));
 				name = "Exit";
 			}
