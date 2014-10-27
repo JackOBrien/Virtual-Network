@@ -7,11 +7,13 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -37,6 +39,8 @@ public class Router {
 	 * The value is the "real" IPv4 address associated with the prefix. */
 	private HashMap<String, InetAddress> prefixes;
 	
+	private ArrayList<InetAddress> routerAddresses;
+	
 	private DatagramSocket routerSocket;
 	
 	/****************************************************************
@@ -48,8 +52,10 @@ public class Router {
 		routerSocket = new DatagramSocket(PORT);
 		
 		prefixes = new HashMap<String, InetAddress>();
+		routerAddresses = new ArrayList<InetAddress>();
 		
 		setRouterNumber(router_number);
+		readAddresses();
 		
 		printWelcomeMessage();
 	}
@@ -98,8 +104,9 @@ public class Router {
 		DatagramPacket recvPacket = receivePacket();
 		byte[] data = recvPacket.getData();
 		
-		System.out.println("\nReceived packet from " + 
-				recvPacket.getAddress().getHostAddress());
+		String src = translateIP(data, 12);
+		
+		System.out.println("\nReceived packet from " + src);
 		
 		int data_length = (int) (((data[2] << 8) | (data[3] & 0xFF)) & 0xFFFF);
 		
@@ -118,6 +125,16 @@ public class Router {
 
 		}
 		
+		String dest = translateIP(data, 16);
+		
+		for (InetAddress addr : routerAddresses) {
+
+			if (addr.getHostAddress().equals(dest)) {
+				printMessage(data, data_length, src);
+				return;
+			}
+		}
+		
 		int TTL = (int) (data[8] & 0xFF);
 		
 		/* Check if the TTL has expired*/
@@ -128,7 +145,6 @@ public class Router {
 		TTL--;
 		data[8] = (byte) TTL;
 		
-		String dest = translateIP(data, 16);
 		InetAddress realDstIP = null;
 		int prefixLength = 0;
 		
@@ -159,6 +175,18 @@ public class Router {
 		System.out.println("Sent message to " + realDstIP.getHostAddress());
 	}	
 	
+	private void printMessage(byte[] data, int end, String srcIP) {
+		System.out.print("Message: ");
+		
+		String str = "";
+		
+		for (int i = 28; i < end; i++) {
+			str += (char) (data[i] & 0xFF);
+		}
+		
+		System.out.println(str);
+	}
+
 	private void validateChecksumIP(byte[] data, int start, int end) 
 			throws IOException {
 		System.out.print("Checking IP Checksum... ");
@@ -249,6 +277,32 @@ public class Router {
 			}
 			
 			prefixes.put(key.substring(1), value);
+		}
+		
+		br.close();
+	}
+	
+	private void readAddresses() throws Exception {
+		String path = PATH + "router-" + router_number + ".txt";
+		
+		BufferedReader br = new BufferedReader(new FileReader(path));
+		String line;
+		
+		/* Reads the file line-by-line */
+		while ((line = br.readLine()) != null) {
+			
+			if (!line.startsWith("address ")) continue;
+			
+			String[] strArr = line.split(" ");
+			InetAddress addr = null;
+			
+			try {
+				addr = InetAddress.getByName(strArr[1]);
+			} catch (UnknownHostException e) {
+				continue;
+			}
+			
+			routerAddresses.add(addr);
 		}
 		
 		br.close();
