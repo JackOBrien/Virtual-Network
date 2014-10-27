@@ -105,7 +105,18 @@ public class Router {
 		
 		// Validates the checksums
 		validateChecksumIP(data, 0, 20);
-		validateChecksumUDP(data, 20, data_length);
+		
+		int protocol = (int) (data[9] & 0xFF);
+		final int UDP = 17;
+		final int ICMP = 1;
+		
+		if (protocol == UDP) {
+			System.out.println("IPv4 Protocol 17: UDP");
+			validateChecksumUDP(data, 20, data_length);
+		} else if (protocol == ICMP) {
+			System.out.println("IPv4 Protocol 1: ICMP");
+
+		}
 		
 		int TTL = (int) (data[8] & 0xFF);
 		
