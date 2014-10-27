@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -38,8 +39,8 @@ public class ClientGUI {
 	/** Text field to accept user input. */
 	private JTextField textField;
 	
-	/** Bar which holds the button to change dst and label displaying the
-	 * current dst. */
+	/** Bar which holds the button to change destination and label 
+	 * displaying the current destination. */
 	private JMenuBar menuBar;
 	
 	/** Label displaying the IPv4 address of the current destination. */
@@ -188,6 +189,24 @@ public class ClientGUI {
 		new DestinationDialog(frame, firstTime, title);
 	}
 	
+	public void receive() {
+		DatagramPacket packet = client.receiveMessage();
+		
+		if (packet == null) return;
+		
+		byte[] data = packet.getData();
+		int data_length = (int) (((data[2] << 8) | (data[3] & 0xFF)) & 0xFFFF);
+		
+		String message = "";
+		
+		for (int i = 28; i < data_length; i++) {
+			message += (char) data[i];
+		}
+		
+		textArea.append("- Got from <" + packet.getAddress().getHostAddress() +
+				"> - " + message + "\n");
+	}
+	
 	/* Action listener to handle user input from text field. */
 	private ActionListener al = new ActionListener() {
 		
@@ -280,7 +299,12 @@ public class ClientGUI {
 			return;
 		}
 		
-		new ClientGUI(client);
+		ClientGUI gui = new ClientGUI(client);
+		
+		while (true) {
+			gui.receive();
+		}
+		
 	}
 	
 	/* Inner class to create the set destination window */

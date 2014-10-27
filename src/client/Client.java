@@ -64,6 +64,20 @@ public class Client {
 		readConfigFile();
 	}
 	
+	public DatagramPacket receiveMessage() {
+		byte[] buf = new byte[1024];
+
+		DatagramPacket packet = new DatagramPacket(buf, buf.length);
+		
+		try {
+			clientSocket.receive(packet);
+		} catch (Exception e) {
+			return null;
+		}
+
+		return packet;
+	}
+	
 	/****************************************************************
 	 * Sends the given message to the IPv4 address given by the
 	 * configuration file. The message is encapsulated with an 
@@ -74,10 +88,6 @@ public class Client {
 	 ***************************************************************/
 	public void sendMessage(String message, InetAddress dstAddr) {
 		byte[] data = buildPacket(message, dstAddr);	
-		
-		System.out.println(Arrays.toString(data));
-		
-		System.out.println(realDst.getHostAddress());
 		
 		DatagramPacket packet = 
 				new DatagramPacket(data, data.length, realDst, PORT);
