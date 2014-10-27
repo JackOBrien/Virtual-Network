@@ -168,9 +168,8 @@ public class Router {
 		
 		// Updates the checksum
 		int newChecksum = IP_Header.calculateChecksum(data, 0, 20);
-		byte[] cSumBytes = ByteBuffer.allocate(2).putInt(newChecksum).array();
-		data[10] = cSumBytes[0];
-		data[11] = cSumBytes[1];
+		data[10] = (byte) (newChecksum >>> 8);
+		data[11] = (byte) (newChecksum);
 		
 		DatagramPacket sendPkt = new DatagramPacket(data, data_length, 
 				realDstIP, PORT);

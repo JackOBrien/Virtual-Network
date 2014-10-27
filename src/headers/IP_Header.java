@@ -82,7 +82,6 @@ public class IP_Header {
 	 ***************************************************************/
 	public void calculateChecksum() {
 		int checksum = calculateChecksum(bits);
-		
 		insertData(80, 96, checksum);
 	}
 	
