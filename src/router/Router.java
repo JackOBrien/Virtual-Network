@@ -13,6 +13,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -135,16 +136,6 @@ public class Router {
 			}
 		}
 		
-		int TTL = (int) (data[8] & 0xFF);
-		
-		/* Check if the TTL has expired*/
-		// TODO: Print and send ICMP
-		if (TTL <= 0) return;
-		
-		// Decrements the TTL
-		TTL--;
-		data[8] = (byte) TTL;
-		
 		InetAddress realDstIP = null;
 		int prefixLength = 0;
 		
@@ -165,6 +156,21 @@ public class Router {
 		System.out.println("Found prexif for " + dest + " -> " + 
 				realDstIP.getHostAddress());
 		
+		int TTL = (int) (data[8] & 0xFF);
+		
+		/* Check if the TTL has expired*/
+		// TODO: Print and send ICMP
+		if (TTL <= 0) return;
+		
+		// Decrements the TTL
+		TTL--;
+		data[8] = (byte) TTL;		
+		
+		// Updates the checksum
+		int newChecksum = IP_Header.calculateChecksum(data, 0, 20);
+		byte[] cSumBytes = ByteBuffer.allocate(2).putInt(newChecksum).array();
+		data[10] = cSumBytes[0];
+		data[11] = cSumBytes[1];
 		
 		DatagramPacket sendPkt = new DatagramPacket(data, data_length, 
 				realDstIP, PORT);
@@ -331,7 +337,7 @@ public class Router {
 			try {
 				handlePacket();
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.err.println(e.getMessage());
 				continue;
 			}
 		}
