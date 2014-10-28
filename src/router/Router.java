@@ -167,8 +167,26 @@ public class Router {
 		int TTL = (int) (data[8] & 0xFF);
 		
 		/* Check if the TTL has expired*/
-		// TODO: Print and send ICMP
-		if (TTL <= 0) return;
+		if (TTL <= 0) { 
+			
+			byte[] ipUDP = new byte[28];
+			
+			for (int i = 0; i < ipUDP.length; i++) {
+				ipUDP[i] = data[i];
+			}
+			
+			ICMP_Header icmp = new ICMP_Header(ICMP_Header.TIME_EXCEEDED);
+			byte[] icmpBytes = icmp.getBytes(ipUDP);
+			
+			InetAddress sender = findMatch(src);
+			
+			DatagramPacket sendPkt = new DatagramPacket(icmpBytes, 
+					icmpBytes.length, sender, PORT);
+			
+			routerSocket.send(sendPkt);
+			
+			return;
+		}
 		
 		// Decrements the TTL
 		TTL--;

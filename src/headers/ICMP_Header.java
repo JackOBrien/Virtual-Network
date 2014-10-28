@@ -21,7 +21,7 @@ public class ICMP_Header {
 		
 	public static final int UNREACHABLE = 3;
 	
-	public static final int TIME_UNREACHABLE = 11;
+	public static final int TIME_EXCEEDED = 11;
 	
 	
 	/****************************************************************
@@ -47,7 +47,7 @@ public class ICMP_Header {
         	setupUnreachableHeader();
         }
         
-        if (type == TIME_UNREACHABLE) {
+        if (type == TIME_EXCEEDED) {
         	setupTimeHeader();
         }
 
