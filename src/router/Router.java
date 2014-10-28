@@ -1,5 +1,6 @@
 package router;
 
+import headers.ICMP_Header;
 import headers.IP_Header;
 import headers.UDP_Header;
 
@@ -123,7 +124,7 @@ public class Router {
 			validateChecksumUDP(data, 20, data_length);
 		} else if (protocol == ICMP) {
 			System.out.println("IPv4 Protocol 1: ICMP");
-
+			validateChecksumICMP(data, 20, 28);
 		}
 		
 		String dest = translateIP(data, 16);
@@ -136,20 +137,27 @@ public class Router {
 			}
 		}
 		
-		InetAddress realDstIP = null;
-		int prefixLength = 0;
-		
-		/* Finds the best matching prefix for the destination IP */
-		for (String prefix : prefixes.keySet()) {
-			if (dest.startsWith(prefix) & prefix.length() > prefixLength) {
-				realDstIP = prefixes.get(prefix);
-				prefixLength = prefix.length();
-			}
-		}
+		InetAddress realDstIP = findMatch(dest);
 		
 		/* If no prefix match was found, the sender must be notified. */
 		if (realDstIP == null) {
-			// TODO: Send ICMP message
+			
+			byte[] ipUDP = new byte[28];
+			
+			for (int i = 0; i < ipUDP.length; i++) {
+				ipUDP[i] = data[i];
+			}
+			
+			ICMP_Header icmp = new ICMP_Header(ICMP_Header.UNREACHABLE);
+			byte[] icmpBytes = icmp.getBytes(ipUDP);
+			
+			InetAddress sender = findMatch(src);
+			
+			DatagramPacket sendPkt = new DatagramPacket(icmpBytes, 
+					icmpBytes.length, sender, PORT);
+			
+			routerSocket.send(sendPkt);
+			
 			return;
 		}
 		
@@ -179,6 +187,21 @@ public class Router {
 		
 		System.out.println("Sent message to " + realDstIP.getHostAddress());
 	}	
+	
+	private InetAddress findMatch(String dest) {
+		InetAddress realDstIP = null;
+		int prefixLength = 0;
+		
+		/* Finds the best matching prefix for the destination IP */
+		for (String prefix : prefixes.keySet()) {
+			if (dest.startsWith(prefix) & prefix.length() > prefixLength) {
+				realDstIP = prefixes.get(prefix);
+				prefixLength = prefix.length();
+			}
+		}
+		
+		return realDstIP;
+	}
 	
 	private void printMessage(byte[] data, int end, String srcIP) {
 		System.out.print("Message: ");

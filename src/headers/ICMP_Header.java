@@ -1,7 +1,5 @@
 package headers;
 
-import java.util.Random;
-
 /********************************************************************
  * ICMP_Header.java
  * 
@@ -21,9 +19,9 @@ public class ICMP_Header {
 	
 	private int type;
 		
-	private final int UNREACHABLE = 3;
+	public static final int UNREACHABLE = 3;
 	
-	private final int TIME_UNREACHABLE = 11;
+	public static final int TIME_UNREACHABLE = 11;
 	
 	
 	/****************************************************************
@@ -43,7 +41,7 @@ public class ICMP_Header {
 	private void setupHeader() {
 		
 		// Set type and code fields
-		insertData(0, 1, type);
+		insertData(0, 8, type);
 		
         if (type == UNREACHABLE) {
         	setupUnreachableHeader();
@@ -53,20 +51,20 @@ public class ICMP_Header {
         	setupTimeHeader();
         }
 
-        calculateChecksum();
+        insertData(16, 32, calculateChecksum(bits));
 	}
 	
 	private void setupUnreachableHeader() {
 		int code = 7;
 		
-		insertData(1, 2, code); 
+		insertData(8, 16, code); 
 
 	}
 	
 	private void setupTimeHeader() {
 		int code = 0;
 		
-		insertData(1, 2, code); 
+		insertData(8, 16, code); 
 
 	}
 	
@@ -115,7 +113,28 @@ public class ICMP_Header {
         bits = bits.substring(0, start) + binary + bits.substring(end);
 	}
 	
-	private void calculateChecksum() {		
+	private static String bytesToBitString(byte[] data, int start, int end) {
+		
+		String bitStr = "";
+		
+		for (int i = start; i < end; i++) {
+			String s = Integer.toBinaryString(data[i] & 0xFF);
+			s = String.format("%8s", s).replace(' ', '0');
+			bitStr += s;
+		}
+		
+		return bitStr;
+	}
+	
+	public static int calculateChecksum(byte[] data, int start, int end) {
+		String bitStr = bytesToBitString(data, start, end);
+		
+		return calculateChecksum(bitStr);
+	}
+	
+	private static int calculateChecksum(String bitStr) {		
+		int header_length = 8;
+		
 		String[] octets = new String[header_length];
 		
 		/* Adds the IP header to the octets array */
@@ -123,7 +142,7 @@ public class ICMP_Header {
 			int start = i * 8;
 			int end = start + 8;
 			
-			octets[i] = bits.substring(start, end);
+			octets[i] = bitStr.substring(start, end);
 		}
 				
 		// Set checksum to 0
@@ -163,6 +182,6 @@ public class ICMP_Header {
 		sum = sum.replace('0', '1');
 		sum = sum.replace('2', '0');
 
-		insertData(16, 32, Integer.parseInt(sum, 2));
+		return Integer.parseInt(sum, 2);
 	}
 }
