@@ -72,7 +72,19 @@ public class Client {
 		} catch (Exception e) {
 			return null;
 		}
-
+		
+		int protocol = buf[9] & 0xFF;
+		
+		if (protocol == 1) {
+			String[] toReturn = new String[3];
+			
+			toReturn[0] = Integer.toString((int) buf[20]);
+			toReturn[1] = translateIP(buf, 12);
+			toReturn[2] = translateIP(buf, 44);
+			
+			return toReturn;
+		}
+		
 		int data_length = (int) (((buf[2] << 8) | (buf[3] & 0xFF)) & 0xFFFF);
 		
 		String message = "";
@@ -120,7 +132,7 @@ public class Client {
 		
 		DatagramPacket packet = 
 				new DatagramPacket(data, data.length, realDst, PORT);
-		
+				
 		try {
 			clientSocket.send(packet);
 		} catch (IOException e) {

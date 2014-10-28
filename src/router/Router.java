@@ -8,13 +8,11 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -105,13 +103,13 @@ public class Router {
 	private void handlePacket() throws IOException {
 		DatagramPacket recvPacket = receivePacket();
 		byte[] data = recvPacket.getData();
-		
+				
 		String src = translateIP(data, 12);
 		
 		System.out.println("\nReceived packet from " + src);
 		
 		int data_length = (int) (((data[2] << 8) | (data[3] & 0xFF)) & 0xFFFF);
-		
+
 		// Validates the checksums
 		validateChecksumIP(data, 0, 20);
 		
@@ -141,23 +139,8 @@ public class Router {
 		
 		/* If no prefix match was found, the sender must be notified. */
 		if (realDstIP == null) {
-			
-			byte[] ipUDP = new byte[28];
-			
-			for (int i = 0; i < ipUDP.length; i++) {
-				ipUDP[i] = data[i];
-			}
-			
-			ICMP_Header icmp = new ICMP_Header(ICMP_Header.UNREACHABLE);
-			byte[] icmpBytes = icmp.getBytes(ipUDP);
-			
-			InetAddress sender = findMatch(src);
-			
-			DatagramPacket sendPkt = new DatagramPacket(icmpBytes, 
-					icmpBytes.length, sender, PORT);
-			
-			routerSocket.send(sendPkt);
-			
+			System.out.println("No prefix match for: " + dest);
+			sendICMP(ICMP_Header.UNREACHABLE, data, src);
 			return;
 		}
 		
@@ -168,23 +151,7 @@ public class Router {
 		
 		/* Check if the TTL has expired*/
 		if (TTL <= 0) { 
-			
-			byte[] ipUDP = new byte[28];
-			
-			for (int i = 0; i < ipUDP.length; i++) {
-				ipUDP[i] = data[i];
-			}
-			
-			ICMP_Header icmp = new ICMP_Header(ICMP_Header.TIME_EXCEEDED);
-			byte[] icmpBytes = icmp.getBytes(ipUDP);
-			
-			InetAddress sender = findMatch(src);
-			
-			DatagramPacket sendPkt = new DatagramPacket(icmpBytes, 
-					icmpBytes.length, sender, PORT);
-			
-			routerSocket.send(sendPkt);
-			
+			sendICMP(ICMP_Header.TIME_EXCEEDED, data, src);
 			return;
 		}
 		
@@ -212,7 +179,22 @@ public class Router {
 		
 		/* Finds the best matching prefix for the destination IP */
 		for (String prefix : prefixes.keySet()) {
-			if (dest.startsWith(prefix) & prefix.length() > prefixLength) {
+			
+			String[] prefixArr = prefix.split("\\.");
+			String[] destArr = dest.split("\\.");
+			
+			String p = "";
+			dest = "";
+			
+			for (int i = 0; i < prefixArr.length; i++) {
+				p += String.format("%3s", prefixArr[i]).replace(' ', '0');
+			}
+			
+			for (int i = 0; i < destArr.length; i++) {
+				dest += String.format("%3s", destArr[i]).replace(' ', '0');
+			}
+			
+			if (dest.startsWith(p) && p.length() > prefixLength) {
 				realDstIP = prefixes.get(prefix);
 				prefixLength = prefix.length();
 			}
@@ -345,6 +327,54 @@ public class Router {
 		}
 		
 		br.close();
+	}
+	
+	private void sendICMP(int type, byte[] data, String src) 
+			throws IOException {
+		byte[] ipUDP = new byte[28];
+		
+		for (int i = 0; i < ipUDP.length; i++) {
+			ipUDP[i] = data[i];
+		}
+		
+		InetAddress sender = findMatch(src); 
+		
+		IP_Header ipHeader = new IP_Header(1);
+		ipHeader.setDestination(sender);
+		ipHeader.setSource(routerAddresses.get(0));
+		ipHeader.setDataSize(36);
+		String ipBits = ipHeader.getBitString();
+		
+		byte[] ipBytes = new byte[20];
+		
+		/* Converts the bit strings into bytes and adds them
+		 * to the byte array. */
+		for (int i = 0; i < ipBytes.length; i++) {
+			int start = i * 8;
+			int end = start + 8;
+			
+			String octet = ipBits.substring(start, end);
+			
+			ipBytes[i] = (byte) Integer.parseInt(octet, 2);
+		}
+		
+		ICMP_Header icmp = new ICMP_Header(type);
+		byte[] icmpBytes = icmp.getBytes(ipUDP);
+				
+		byte[] packetBytes = new byte[ipBytes.length + icmpBytes.length];
+		
+		for (int i = 0; i < ipBytes.length; i++) {
+			packetBytes[i] = ipBytes[i];
+		}
+		
+		for (int i = 0; i < icmpBytes.length; i++) {
+			packetBytes[i + ipBytes.length] = icmpBytes[i];
+		}
+		
+		DatagramPacket sendPkt = new DatagramPacket(packetBytes, 
+				packetBytes.length, sender, PORT);
+		
+		routerSocket.send(sendPkt);
 	}
 	
 	private void readAddresses() throws Exception {

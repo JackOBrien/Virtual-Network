@@ -20,12 +20,21 @@ public class IP_Header {
 	/** Bit string representing this header. */
 	private String bits;
 	
+	private int protocol;
+	
 	/****************************************************************
 	 * Default constructor for IP_Header. Sets all the default values
 	 * into the bit string representing this header.
 	 ***************************************************************/
 	public IP_Header() {
 		bits = new String(new char[header_length * 8]).replace("\0", "0");
+		protocol = 17;
+		setupHeader();
+	}
+	
+	public IP_Header(int proto) {
+		bits = new String(new char[header_length * 8]).replace("\0", "0");
+		protocol = proto;
 		setupHeader();
 	}
 	
@@ -50,7 +59,6 @@ public class IP_Header {
 		int ttl = 64;
 		insertData(64, 72, ttl);
 		
-		int protocol = 17;
 		insertData(72, 80, protocol);
 	}
 	
@@ -80,7 +88,7 @@ public class IP_Header {
 	/****************************************************************
 	 * Calculates the IPv4 checksum.
 	 ***************************************************************/
-	public void calculateChecksum() {
+	private void calculateChecksum() {
 		int checksum = calculateChecksum(bits);
 		insertData(80, 96, checksum);
 	}

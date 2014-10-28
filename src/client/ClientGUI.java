@@ -1,5 +1,7 @@
 package client;
 
+import headers.ICMP_Header;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -192,6 +194,24 @@ public class ClientGUI {
 		String[] data = client.receiveMessage();
 		
 		if (data == null) return;
+				
+		/* ICMP message */
+		if (data.length == 3) {
+			int type = Integer.parseInt(data[0]);
+			String src = data[1];
+			String message = "";
+			
+			if (type == ICMP_Header.UNREACHABLE) {
+				String badHost = data[2];
+				message = "-- ICMP from <" + src + "> Unknown host: " +
+						badHost;
+			} else if (type == ICMP_Header.TIME_EXCEEDED) {
+				message = "-- ICMP from <" + src + "> TTL expired";
+			}
+			
+			textArea.append(message + "\n");
+			return;
+		} 
 		
 		String src = data[0];
 		String message = data[1];
