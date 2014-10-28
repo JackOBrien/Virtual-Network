@@ -379,6 +379,8 @@ public class Router {
 				packetBytes.length, sender, PORT);
 		
 		routerSocket.send(sendPkt);
+		
+		System.out.println("Sent ICMP type " + type + " to " + src);
 	}
 	
 	private void readAddresses() throws Exception {
