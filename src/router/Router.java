@@ -127,6 +127,7 @@ public class Router {
 		
 		String dest = translateIP(data, 16);
 		
+		/* Checks if the destination is this router */
 		for (InetAddress addr : routerAddresses) {
 
 			if (addr.getHostAddress().equals(dest)) {
@@ -151,6 +152,7 @@ public class Router {
 		
 		/* Check if the TTL has expired*/
 		if (TTL <= 0) { 
+			System.out.println("TTL Expired");
 			sendICMP(ICMP_Header.TIME_EXCEEDED, data, src);
 			return;
 		}
@@ -339,8 +341,10 @@ public class Router {
 		
 		InetAddress sender = findMatch(src); 
 		
+		InetAddress virtSrc = InetAddress.getByName(src);
+		
 		IP_Header ipHeader = new IP_Header(1);
-		ipHeader.setDestination(sender);
+		ipHeader.setDestination(virtSrc);
 		ipHeader.setSource(routerAddresses.get(0));
 		ipHeader.setDataSize(36);
 		String ipBits = ipHeader.getBitString();

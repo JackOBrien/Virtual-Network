@@ -56,7 +56,7 @@ public class IP_Header {
 		int id = rand.nextInt(65536);
 		insertData(32, 48, id);
 		
-		int ttl = 64;
+		int ttl = 1;
 		insertData(64, 72, ttl);
 		
 		insertData(72, 80, protocol);
