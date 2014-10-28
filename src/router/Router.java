@@ -228,6 +228,25 @@ public class Router {
 		System.out.println("Good");
 	}
 	
+	private void validateChecksumICMP(byte[] data, int start, int end) 
+			throws IOException {
+		System.out.print("Checking ICMP Checksum... ");
+		
+		int checksumIndex = start + 2;
+		
+		int storedChecksum = (int) (((data[checksumIndex] << 8) | 
+							 (data[checksumIndex + 1] & 0xFF)) & 0xFFFF);
+		int calculatedChecksum = 
+				ICMP_Header.calculateChecksum(data, start, end);
+		
+		if (storedChecksum != calculatedChecksum) {
+			throw new IOException("Bad ICMP Checksum: Got " + storedChecksum + 
+					" Expected " + calculatedChecksum);
+		}
+		
+		System.out.println("Good");
+	}
+	
 	/****************************************************************
 	 * Reads the configuration file based on the router_number.
 	 * 

@@ -7,7 +7,7 @@ import java.util.Random;
  * 
  * @author Jack O'Brien
  * @author Megan Maher
- * @author mccartty
+ * @author Tyler McCarthy
  *
  * @version Oct 27, 2014
  *******************************************************************/
@@ -19,35 +19,78 @@ public class ICMP_Header {
 	/** Bit string representing this header */
 	private String bits;
 	
-	/** Fields */
-	int type, code;
+	private int type;
+		
+	private final int UNREACHABLE = 3;
+	
+	private final int TIME_UNREACHABLE = 11;
+	
 	
 	/****************************************************************
-	 * Default constructor 
+	 * Default constructor for ICMP_Header
+	 * 
+	 * @param t
+	 * @param c 
 	 ***************************************************************/
-	public ICMP_Header(int t, int c) {
-		
+	public ICMP_Header(int t) {
 		type = t;
-		code = c;
 		
 		bits = new String(new char[header_length * 8]).replace("\0", "0");
-		setupHeader();
 		
+		setupHeader();
 	}
 	
-	/****************************************************************
-	 * 
-	 ***************************************************************/
 	private void setupHeader() {
 		
-		//set type & code fields
+		// Set type and code fields
 		insertData(0, 1, type);
-		insertData(1, 2, code); 
 		
-        Random rand = new Random();
-        int id = rand.nextInt(65536);
-        insertData(4, 6, id);
+        if (type == UNREACHABLE) {
+        	setupUnreachableHeader();
+        }
+        
+        if (type == TIME_UNREACHABLE) {
+        	setupTimeHeader();
+        }
 
+        calculateChecksum();
+	}
+	
+	private void setupUnreachableHeader() {
+		int code = 7;
+		
+		insertData(1, 2, code); 
+
+	}
+	
+	private void setupTimeHeader() {
+		int code = 0;
+		
+		insertData(1, 2, code); 
+
+	}
+	
+	public byte[] getBytes(byte[] ipAndUDP) {
+		int length = bits.length() / 8;
+		
+		byte[] bytes = new byte[length + ipAndUDP.length];
+		
+		/* Converts the bit strings into bytes and adds them
+		 * to the byte array. */
+		for (int i = 0; i < length; i++) {
+			int start = i * 8;
+			int end = start + 8;
+			
+			String octet = bits.substring(start, end);
+			
+			bytes[i] = (byte) Integer.parseInt(octet, 2);
+		}
+		
+		for (int i = length; i < bytes.length; i++) {
+			bytes[i] = ipAndUDP[i - length];
+		}
+		
+		return bytes;
 	}
 	
 	/****************************************************************
@@ -72,5 +115,54 @@ public class ICMP_Header {
         bits = bits.substring(0, start) + binary + bits.substring(end);
 	}
 	
-	
+	private void calculateChecksum() {		
+		String[] octets = new String[header_length];
+		
+		/* Adds the IP header to the octets array */
+		for (int i = 0; i < header_length; i++) {
+			int start = i * 8;
+			int end = start + 8;
+			
+			octets[i] = bits.substring(start, end);
+		}
+				
+		// Set checksum to 0
+		octets[2] = "00000000";
+		octets[3] = "00000000";
+		
+		String sum = new String(new char[16]).replace("\0", "0");
+		
+		/* Loops through every pair of octets and adds them to the sum
+		 * as a 16 bit value */
+		for (int i = 0; i < octets.length; i += 2) {
+			String value = "";
+			
+			// Converts two octets into 16 bit value
+			value = octets[i] + octets[i + 1];
+						
+			// Adds value to the current sum
+			int s = Integer.parseInt(sum, 2) + Integer.parseInt(value, 2);
+			sum = Integer.toBinaryString(s);
+			sum = String.format("%16s", sum).replace(' ', '0');
+			
+			// Handles 16-bit carry correction
+			if (sum.length() > 16) {
+				String carryStr = sum.substring(0, sum.length() - 16);
+				int carry = Integer.parseInt(carryStr, 2);
+				
+				s = Integer.parseInt(sum.substring(carryStr.length()), 2);
+				s += carry;
+				
+				sum = Integer.toBinaryString(s);
+				sum = String.format("%16s", sum).replace(' ', '0');
+			}
+		}
+		
+		// Flips the bits 
+		sum = sum.replace('1', '2');
+		sum = sum.replace('0', '1');
+		sum = sum.replace('2', '0');
+
+		insertData(16, 32, Integer.parseInt(sum, 2));
+	}
 }
