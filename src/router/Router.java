@@ -365,7 +365,7 @@ public class Router {
 		
 		ICMP_Header icmp = new ICMP_Header(type);
 		byte[] icmpBytes = icmp.getBytes(ipUDP);
-		icmpBytes = icmp.getBytes(ipUDP);
+		icmpBytes = icmp.getBytes(ipUDP); // Need this twice!
 				
 		byte[] packetBytes = new byte[ipBytes.length + icmpBytes.length];
 		
