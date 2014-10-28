@@ -73,6 +73,8 @@ public class ClientGUI {
 		setupFrame();
 		
 		setDestination(true);
+		
+		frame.setTitle("Client " + client.getTitle());
 	}
 	
 	/****************************************************************
