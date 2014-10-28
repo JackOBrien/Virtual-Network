@@ -51,7 +51,7 @@ public class ICMP_Header {
         	setupTimeHeader();
         }
 
-        insertData(16, 32, calculateChecksum(bits));
+//        insertData(16, 32, calculateChecksum(bits));
 	}
 	
 	private void setupUnreachableHeader() {
@@ -87,6 +87,8 @@ public class ICMP_Header {
 		for (int i = length; i < bytes.length; i++) {
 			bytes[i] = ipAndUDP[i - length];
 		}
+		
+		insertData(16, 32, calculateChecksum(bytes, 0, bytes.length));
 		
 		return bytes;
 	}
@@ -132,8 +134,8 @@ public class ICMP_Header {
 		return calculateChecksum(bitStr);
 	}
 	
-	private static int calculateChecksum(String bitStr) {		
-		int header_length = 8;
+	private static int calculateChecksum(String bitStr) {
+		int header_length = 36;
 		
 		String[] octets = new String[header_length];
 		

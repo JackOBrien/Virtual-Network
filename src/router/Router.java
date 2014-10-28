@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -122,7 +123,7 @@ public class Router {
 			validateChecksumUDP(data, 20, data_length);
 		} else if (protocol == ICMP) {
 			System.out.println("IPv4 Protocol 1: ICMP");
-			validateChecksumICMP(data, 20, 28);
+			validateChecksumICMP(data, 20, 56);
 		}
 		
 		String dest = translateIP(data, 16);
@@ -256,7 +257,7 @@ public class Router {
 	private void validateChecksumICMP(byte[] data, int start, int end) 
 			throws IOException {
 		System.out.print("Checking ICMP Checksum... ");
-		
+				
 		int checksumIndex = start + 2;
 		
 		int storedChecksum = (int) (((data[checksumIndex] << 8) | 
@@ -364,6 +365,7 @@ public class Router {
 		
 		ICMP_Header icmp = new ICMP_Header(type);
 		byte[] icmpBytes = icmp.getBytes(ipUDP);
+		icmpBytes = icmp.getBytes(ipUDP);
 				
 		byte[] packetBytes = new byte[ipBytes.length + icmpBytes.length];
 		
