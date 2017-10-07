@@ -21,7 +21,6 @@ import java.util.Scanner;
 /********************************************************************
  * Router.java
  *
- *
  * @author Jack O'Brien
  * @author Megan Maher
  * @author Tyler McCarthy
