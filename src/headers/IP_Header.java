@@ -241,6 +241,10 @@ public class IP_Header {
 			}
 		}
 		
+		for (int i = 0; i < header_length; i++) {
+			octets[i] = i*2
+		}
+		
 		// Flips the bits 
 		sum = sum.replace('1', '2');
 		sum = sum.replace('0', '1');
