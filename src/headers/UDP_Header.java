@@ -9,7 +9,7 @@ package headers;
  *
  * @version Oct 20, 2014
  *******************************************************************/
-public class UDP_Header {
+public class UDP_Header extends Header {
 
 	/** The UDP header length is 8 bytes. */
 	private final int header_length = 8;
@@ -102,19 +102,6 @@ public class UDP_Header {
 		return bits;
 	}
 	
-	private static String bytesToBitString(byte[] data, int start, int end) {
-		
-		String bitStr = "";
-		
-		for (int i = start; i < end; i++) {
-			String s = Integer.toBinaryString(data[i] & 0xFF);
-			s = String.format("%8s", s).replace(' ', '0');
-			bitStr += s;
-		}
-		
-		return bitStr;
-	}
-	
 	private static String bytesToString(byte[] data, int start, int end) {
 		
 		String str = "";
@@ -125,8 +112,7 @@ public class UDP_Header {
 		
 		return str;
 	}
-	
-	
+
 	public static int calculateChecksum(byte[] data, int start, int end) {
 		byte[] pseudoHeader = new byte[10];
 		int index = start - 8; // Index of source from IPv4 above UDP
@@ -145,8 +131,8 @@ public class UDP_Header {
 		
 		return calculateChecksum(udpBits, ipBits, message);
 	}
-	
-	private static int calculateChecksum(String bits, String ipv4Bits, 
+
+	private static int calculateChecksum(String bits, String ipv4Bits,
 			String message) {
 		
 		int header_length = 8;
